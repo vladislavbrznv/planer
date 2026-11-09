@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Büsra's Planer</title>
+<meta name="theme-color" content="#f3f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14121b" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Planer">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: one phone-width column, sticky tab bar, three views (Heute / Kalender / Haut) */
+:root{
+  --bg:#f3f2f7; --surface:#ffffff; --sunk:#e9e7f0; --fg:#1f1b2c; --muted:#6c6680; --line:#dcd9e5;
+  --accent:#5b3d8f; --accent-soft:#ece5f7; --ok:#1f7a5a; --ok-soft:#dcf1e8; --warn:#a2560f; --warn-soft:#fbead6;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Figtree", "Segoe UI", system-ui, sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14121b; --surface:#1d1a27; --sunk:#262233; --fg:#ece9f5; --muted:#9e97b3; --line:#332e44;
+  --accent:#b9a0ea; --accent-soft:#2e2642; --ok:#6fd3a8; --ok-soft:#173329; --warn:#f0b26e; --warn-soft:#3a2817; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14121b; --surface:#1d1a27; --sunk:#262233; --fg:#ece9f5; --muted:#9e97b3; --line:#332e44;
+  --accent:#b9a0ea; --accent-soft:#2e2642; --ok:#6fd3a8; --ok-soft:#173329; --warn:#f0b26e; --warn-soft:#3a2817; color-scheme:dark}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;padding-top:env(safe-area-inset-top, 0px);padding-bottom:env(safe-area-inset-bottom, 0px);background:var(--bg)}
+[hidden]{display:none!important}
+body{margin:0;-webkit-tap-highlight-color:transparent;background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 48px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top, 0px);z-index:10;background:var(--bg)}
+.wrap{max-width:560px;margin:0 auto}
+header{padding-block:22px 6px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font:700 30px/1 var(--display);margin:0;letter-spacing:-.02em;text-wrap:balance}
+h1 span{color:var(--accent)}
+.date{color:var(--muted);font-size:14px}
+nav{position:sticky;top:env(safe-area-inset-top, 0px);z-index:5;background:var(--bg);padding-block:10px;display:flex;gap:6px}
+nav button{flex:1;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 14px var(--body);padding:10px 8px;border-radius:999px;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+section.view{display:flex;flex-direction:column;gap:22px;padding-top:8px}
+h2{font:700 13px/1 var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--line);min-width:0}
+.row:first-child{border-top:0}
+.row .grow{flex:1;min-width:0;overflow-wrap:anywhere}
+.small{font-size:13px;color:var(--muted)}
+.empty{padding:16px 14px;color:var(--muted);font-size:14px}
+input[type=text],input[type=time],input[type=number],select{font:inherit;color:var(--fg);background:var(--sunk);border:1px solid transparent;border-radius:10px;padding:10px 12px;min-width:0}
+input:focus,select:focus{border-color:var(--accent);outline:none}
+form.add{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);flex-wrap:wrap}
+form.add input[type=text]{flex:1 1 160px}
+.btn{border:0;background:var(--accent);color:var(--bg);font:600 14px var(--body);padding:10px 14px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.btn.ghost{background:var(--accent-soft);color:var(--accent)}
+.btn.ok{background:var(--ok-soft);color:var(--ok)}
+.x{border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 6px;border-radius:6px;line-height:1}
+.x:hover{color:var(--fg);background:var(--sunk)}
+.check{appearance:none;width:22px;height:22px;border:2px solid var(--line);border-radius:7px;flex:none;cursor:pointer;display:grid;place-content:center;margin:0}
+.check:checked{background:var(--ok);border-color:var(--ok)}
+.check:checked::after{content:"";width:6px;height:11px;border:solid var(--bg);border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.done .grow{text-decoration:line-through;color:var(--muted)}
+.pill{font:600 12px var(--body);padding:4px 9px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.due{background:var(--accent-soft);color:var(--accent)}
+.pill.rest{background:var(--sunk);color:var(--muted)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.slot{font:600 11px var(--body);letter-spacing:.06em;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 5px}
+.time{font:600 14px var(--body);font-variant-numeric:tabular-nums;color:var(--accent);min-width:44px}
+.hint{background:var(--warn-soft);color:var(--warn);border-radius:var(--r);padding:12px 14px;font-size:14px}
+.status{font-size:12px;color:var(--muted);text-align:center;padding-top:18px}
+
+/* skincare cards */
+.actives{display:grid;gap:10px}
+.active{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.active .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.active .name{font:600 16px var(--body);flex:1 1 150px;min-width:0}
+a.btn{text-decoration:none;display:inline-flex;align-items:center}
+.dots{display:flex;gap:4px;align-items:center}
+.dots i{width:14px;height:14px;border-radius:4px;background:var(--sunk)}
+.dots i.on{background:var(--ok)}
+.dots i.today{outline:1.5px solid var(--muted);outline-offset:1px}
+.active .bottom{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+
+/* calendar */
+.calhead{display:flex;align-items:center;justify-content:space-between;padding:12px 14px}
+.calhead b{font:700 18px var(--display)}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 10px 12px}
+.grid .wd{font:600 11px var(--body);color:var(--muted);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:.06em}
+.day{aspect-ratio:1;max-width:100%;border:0;border-radius:10px;background:none;color:var(--fg);font:500 14px var(--body);font-variant-numeric:tabular-nums;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0}
+.day.other{color:var(--muted);opacity:.45}
+.day.today{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.day.sel{background:var(--accent);color:var(--bg)}
+.day .m{display:flex;gap:2px;height:5px}
+.day .m i{width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.day .m i.s{background:var(--ok)}
+.day.sel .m i{background:var(--bg)}
+.legend{display:flex;gap:14px;padding:0 14px 12px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:1px}
+details summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14px;padding:12px 14px;list-style:none}
+details summary::-webkit-details-marker{display:none}
+@media (prefers-reduced-motion:no-preference){.active,.row{transition:background .15s}}
+input,select{font-size:16px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Büsra's <span>Planer</span></h1>
+    <div class="date" id="today-label"></div>
+  </header>
+  <nav role="tablist">
+    <button role="tab" id="tab-heute" data-view="heute" aria-selected="true">Heute</button>
+    <button role="tab" id="tab-kalender" data-view="kalender" aria-selected="false">Kalender</button>
+    <button role="tab" id="tab-haut" data-view="haut" aria-selected="false">Haut</button>
+  </nav>
+
+  <!-- HEUTE -->
+  <section class="view" id="view-heute">
+    <div id="hint-today"></div>
+    <div>
+      <h2>Skincare heute</h2>
+      <div class="panel" id="today-skin"></div>
+    </div>
+    <div>
+      <h2>Termine heute</h2>
+      <div class="panel" id="today-events"></div>
+    </div>
+    <div>
+      <h2>To-dos</h2>
+      <div class="panel">
+        <div id="todos"></div>
+        <form class="add" id="todo-form">
+          <input type="text" id="todo-input" placeholder="Neues To-do…" autocomplete="off" aria-label="Neues To-do">
+          <button class="btn" type="submit">Hinzufügen</button>
+        </form>
+      </div>
+      <div style="padding-top:8px;text-align:right"><button class="btn ghost" id="clear-done" type="button">Erledigte entfernen</button></div>
+    </div>
+  </section>
+
+  <!-- KALENDER -->
+  <section class="view" id="view-kalender" hidden>
+    <div class="panel">
+      <div class="calhead">
+        <button class="x" id="prev" aria-label="Vorheriger Monat">‹</button>
+        <b id="month-label"></b>
+        <button class="x" id="next" aria-label="Nächster Monat">›</button>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Termin</span><span><i style="background:var(--ok)"></i>Skincare benutzt</span></div>
+    </div>
+    <div>
+      <h2 id="sel-label"></h2>
+      <div class="panel">
+        <div id="sel-events"></div>
+        <form class="add" id="event-form">
+          <input type="time" id="event-time" aria-label="Uhrzeit (optional)">
+          <input type="text" id="event-input" placeholder="Termin eintragen…" autocomplete="off" aria-label="Termin">
+          <button class="btn" type="submit">Eintragen</button>
+        </form>
+      </div>
+    </div>
+    <div>
+      <h2>Skincare an diesem Tag</h2>
+      <div class="panel" id="sel-skin"></div>
+    </div>
+  </section>
+
+  <!-- HAUT -->
+  <section class="view" id="view-haut" hidden>
+    <div>
+      <h2>Deine Wirkstoffe</h2>
+      <div class="actives" id="actives"></div>
+    </div>
+    <div class="panel">
+      <details id="add-active">
+        <summary>+ Wirkstoff hinzufügen</summary>
+        <form class="add" id="active-form" style="border-top:1px solid var(--line)">
+          <input type="text" id="active-name" placeholder="z. B. Retinol 0,3 %" autocomplete="off" aria-label="Name">
+          <select id="active-kind" aria-label="Art">
+            <option value="retinoid">Retinoid</option>
+            <option value="acid">Säure (AHA/BHA/PHA)</option>
+            <option value="vitc">Vitamin C</option>
+            <option value="bpo">Benzoylperoxid</option>
+            <option value="niacinamide">Niacinamid</option>
+            <option value="other">Sonstiges</option>
+          </select>
+          <select id="active-slot" aria-label="Tageszeit">
+            <option value="PM">Abends</option>
+            <option value="AM">Morgens</option>
+          </select>
+          <label class="small" style="display:flex;align-items:center;gap:6px">alle
+            <input type="number" id="active-every" min="1" max="30" value="2" style="width:64px" aria-label="Alle wie viele Tage"> Tage</label>
+          <button class="btn" type="submit">Speichern</button>
+        </form>
+      </details>
+    </div>
+    <div>
+      <h2>Erinnerungen</h2>
+      <div class="panel">
+        <div id="reminders"></div>
+        <form class="add" id="rem-form">
+          <input type="text" id="rem-name" placeholder="z. B. Gesichtsmaske" autocomplete="off" aria-label="Woran erinnern">
+          <label class="small" style="display:flex;align-items:center;gap:6px">alle
+            <input type="number" id="rem-every" min="1" max="60" value="4" style="width:64px" aria-label="Alle wie viele Tage"> Tage</label>
+          <input type="time" id="rem-time" value="20:00" aria-label="Uhrzeit">
+          <button class="btn" type="submit">Anlegen</button>
+        </form>
+      </div>
+      <p class="small" style="margin:8px 0 0">Die Benachrichtigung kommt über Google Kalender: „In Google Kalender“ antippen und dort speichern. Dann meldet sich dein Handy wie bei jedem Termin.</p>
+    </div>
+    <div>
+      <h2>Backup</h2>
+      <div class="panel">
+        <div class="row"><div class="grow small">Alles ist nur auf diesem Handy gespeichert. Ab und zu ein Backup machen, z. B. an dich selbst auf WhatsApp schicken.</div></div>
+        <div class="row" style="flex-wrap:wrap">
+          <button class="btn" type="button" id="backup-export">Backup sichern</button>
+          <label class="btn ghost" for="backup-import" style="cursor:pointer">Backup laden</label>
+          <input type="file" id="backup-import" accept="application/json,.json" hidden>
+        </div>
+      </div>
+    </div>
+    <p class="small" style="margin:0">„Fällig“ heißt: die Pause seit dem letzten Mal ist vorbei. Vergessen einzutragen? Im Kalender den Tag antippen und nachträglich abhaken. Die Kombi-Hinweise sind Faustregeln, keine Hautarzt-Beratung.</p>
+  </section>
+
+  <div class="status" id="status">Wird geladen…</div>
+</div>
+
+<script>
+(() => {
+  const KEY = "tagwerk.v1";
+  const KIND = {retinoid:"Retinoid", acid:"Säure", vitc:"Vitamin C", bpo:"Benzoylperoxid", niacinamide:"Niacinamid", other:"Sonstiges"};
+  // Faustregeln: nicht in derselben Routine kombinieren
+  const CLASH = [["retinoid","acid"],["retinoid","bpo"],["retinoid","vitc"],["vitc","bpo"]];
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const pad = n => String(n).padStart(2, "0");
+  const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const parse = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+  const daysBetween = (a, b) => Math.round((parse(b) - parse(a)) / 864e5);
+  const TODAY = iso(new Date());
+  const fmtLong = new Intl.DateTimeFormat("de-DE", {weekday:"long", day:"numeric", month:"long"});
+  const fmtMonth = new Intl.DateTimeFormat("de-DE", {month:"long", year:"numeric"});
+
+  const starter = () => ({
+    todos: [],
+    events: [],
+    actives: [
+      {id:uid(), name:"Retinol", kind:"retinoid", slot:"PM", every:3},
+      {id:uid(), name:"AHA/BHA-Peeling", kind:"acid", slot:"PM", every:4},
+      {id:uid(), name:"Vitamin C Serum", kind:"vitc", slot:"AM", every:1},
+    ],
+    uses: {}
+  });
+
+  let state = null;
+  try { const raw = localStorage.getItem(KEY); if (raw) state = JSON.parse(raw); } catch {}
+  if (!state) state = starter();
+  normalize();
+
+  function normalize(){
+    state.todos ||= []; state.events ||= []; state.actives ||= []; state.uses ||= {}; state.reminders ||= [];
+  }
+
+  // Google-Kalender-Link mit Wiederholung alle N Tage
+  function gcal(title, startDay, time, every, details){
+    const [h, m] = (time || "20:00").split(":").map(Number);
+    const s = parse(startDay); s.setHours(h, m, 0, 0);
+    const e = new Date(s.getTime() + 15 * 60000);
+    const f = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+    const p = new URLSearchParams({action:"TEMPLATE", text:title, dates:`${f(s)}/${f(e)}`,
+      recur:`RRULE:FREQ=DAILY;INTERVAL=${every}`, details: details || "Erinnerung aus dem Planer"});
+    return "https://calendar.google.com/calendar/render?" + p.toString();
+  }
+  function nextDue(a){
+    const last = lastUse(a.id);
+    if (!last) return TODAY;
+    const d = parse(last); d.setDate(d.getDate() + a.every);
+    const k = iso(d); return k < TODAY ? TODAY : k;
+  }
+
+  // ---------- persistence (nur auf diesem Gerät) ----------
+  const statusEl = document.getElementById("status");
+  function setStatus(t){ statusEl.textContent = t; }
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify(state)); setStatus("Gespeichert auf diesem Handy"); }
+    catch { setStatus("Speichern hat nicht geklappt. Ist der Speicher voll?"); }
+  }
+  async function connect(){
+    // Browser bitten, die Daten nicht automatisch zu löschen
+    try { if (navigator.storage?.persist) await navigator.storage.persist(); } catch {}
+    setStatus("Gespeichert auf diesem Handy");
+  }
+
+  // ---------- Backup ----------
+  async function exportBackup(){
+    const name = `planer-backup-${TODAY}.json`;
+    const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
+    const file = new File([blob], name, {type:"application/json"});
+    try {
+      if (navigator.canShare?.({files:[file]})){ await navigator.share({files:[file], title:"Planer-Backup"}); return; }
+    } catch (e) { if (e?.name === "AbortError") return; }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+  async function importBackup(f){
+    try {
+      const data = JSON.parse(await f.text());
+      if (!data || !Array.isArray(data.actives)) throw 0;
+      state = data; normalize(); save(); render();
+      setStatus("Backup wiederhergestellt");
+    } catch { setStatus("Diese Datei ist kein Planer-Backup."); }
+  }
+
+  // ---------- skincare logic ----------
+  const usedOn = (aid, day) => (state.uses[aid] || []).includes(day);
+  function lastUse(aid, before = TODAY){
+    const list = (state.uses[aid] || []).filter(d => d <= before).sort();
+    return list.length ? list[list.length-1] : null;
+  }
+  function statusOf(a){
+    if (usedOn(a.id, TODAY)) return {cls:"ok", text:"Heute benutzt"};
+    const last = lastUse(a.id);
+    if (!last) return {cls:"due", text:"Noch nie eingetragen"};
+    const since = daysBetween(last, TODAY);
+    if (since >= a.every) return {cls:"due", text:"Fällig"};
+    const left = a.every - since;
+    return {cls:"rest", text: left === 1 ? "Pause bis morgen" : `Pause, noch ${left} Tage`};
+  }
+  function sinceText(a){
+    const last = lastUse(a.id);
+    if (!last) return "Noch nie benutzt";
+    const s = daysBetween(last, TODAY);
+    return s === 0 ? "Zuletzt: heute" : s === 1 ? "Zuletzt: gestern" : `Zuletzt: vor ${s} Tagen`;
+  }
+  function clashesFor(a, day){
+    return state.actives.filter(b => b.id !== a.id && b.slot === a.slot && usedOn(b.id, day) &&
+      CLASH.some(([x,y]) => (x===a.kind && y===b.kind) || (y===a.kind && x===b.kind)));
+  }
+  function toggleUse(aid, day){
+    const list = state.uses[aid] || (state.uses[aid] = []);
+    const i = list.indexOf(day);
+    if (i >= 0) list.splice(i, 1); else list.push(day);
+    // nur die letzten 120 Tage behalten
+    state.uses[aid] = list.filter(d => daysBetween(d, TODAY) <= 120);
+    save(); render();
+  }
+
+  // ---------- rendering ----------
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  let view = "heute", selDay = TODAY, month = parse(TODAY); month.setDate(1);
+
+  function render(){
+    $("today-label").textContent = fmtLong.format(parse(TODAY));
+    renderToday(); renderCalendar(); renderActives();
+  }
+
+  function slotLabel(s){ return `<span class="slot">${s === "AM" ? "MORGENS" : "ABENDS"}</span>`; }
+
+  function renderToday(){
+    // skincare
+    const rows = state.actives.map(a => {
+      const st = statusOf(a), used = usedOn(a.id, TODAY);
+      return `<div class="row${used ? " done" : ""}">
+        <input type="checkbox" class="check" data-use="${a.id}" data-day="${TODAY}" ${used ? "checked" : ""} aria-label="${esc(a.name)} heute benutzt">
+        <div class="grow"><div>${esc(a.name)}</div><div class="small">${sinceText(a)}</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px">${slotLabel(a.slot)}<span class="pill ${st.cls}">${st.text}</span></div></div></div>`;
+    });
+    $("today-skin").innerHTML = rows.join("") || `<div class="empty">Noch keine Wirkstoffe. Im Tab „Haut“ anlegen.</div>`;
+
+    const warn = [];
+    for (const a of state.actives) if (usedOn(a.id, TODAY)) for (const b of clashesFor(a, TODAY)) if (a.id < b.id) warn.push(`${a.name} + ${b.name}`);
+    $("hint-today").innerHTML = warn.length ? `<div class="hint"><b>Kombi-Check:</b> ${warn.map(esc).join(", ")} in derselben Routine. Das reizt die Haut oft, besser auf verschiedene Tage oder morgens/abends aufteilen.</div>` : "";
+
+    // events
+    const ev = state.events.filter(e => e.date === TODAY).sort((a,b) => (a.time||"99").localeCompare(b.time||"99"));
+    $("today-events").innerHTML = ev.map(eventRow).join("") || `<div class="empty">Heute nichts eingetragen.</div>`;
+
+    // todos
+    const open = state.todos.filter(t => !t.done), done = state.todos.filter(t => t.done);
+    $("todos").innerHTML = [...open, ...done].map(t => `<div class="row${t.done ? " done" : ""}">
+        <input type="checkbox" class="check" data-todo="${t.id}" ${t.done ? "checked" : ""} aria-label="Erledigt">
+        <div class="grow">${esc(t.text)}</div>
+        <button class="x" data-deltodo="${t.id}" aria-label="Löschen">×</button></div>`).join("")
+      || `<div class="empty">Alles erledigt. Oder noch nichts eingetragen.</div>`;
+    $("clear-done").hidden = !done.length;
+  }
+
+  function eventRow(e){
+    return `<div class="row"><span class="time">${e.time || "–"}</span><div class="grow">${esc(e.title)}</div>
+      <button class="x" data-delevent="${e.id}" aria-label="Termin löschen">×</button></div>`;
+  }
+
+  function renderCalendar(){
+    $("month-label").textContent = fmtMonth.format(month);
+    const start = new Date(month); const off = (start.getDay() + 6) % 7; start.setDate(1 - off);
+    let html = ["Mo","Di","Mi","Do","Fr","Sa","So"].map(d => `<div class="wd">${d}</div>`).join("");
+    for (let i = 0; i < 42; i++){
+      const d = new Date(start); d.setDate(start.getDate() + i);
+      const k = iso(d);
+      if (i === 35 && d.getMonth() !== month.getMonth()) break;
+      const hasEv = state.events.some(e => e.date === k);
+      const hasSkin = state.actives.some(a => usedOn(a.id, k));
+      const cls = ["day", d.getMonth() !== month.getMonth() && "other", k === TODAY && "today", k === selDay && "sel"].filter(Boolean).join(" ");
+      html += `<button class="${cls}" data-day-pick="${k}" aria-label="${fmtLong.format(d)}">${d.getDate()}<span class="m">${hasEv ? "<i></i>" : ""}${hasSkin ? '<i class="s"></i>' : ""}</span></button>`;
+    }
+    $("grid").innerHTML = html;
+    $("sel-label").textContent = selDay === TODAY ? "Heute" : fmtLong.format(parse(selDay));
+    const ev = state.events.filter(e => e.date === selDay).sort((a,b) => (a.time||"99").localeCompare(b.time||"99"));
+    $("sel-events").innerHTML = ev.map(eventRow).join("") || `<div class="empty">Keine Termine an diesem Tag.</div>`;
+    const future = selDay > TODAY;
+    $("sel-skin").innerHTML = state.actives.map(a => {
+      const used = usedOn(a.id, selDay);
+      return `<div class="row${used ? " done" : ""}">
+        <input type="checkbox" class="check" data-use="${a.id}" data-day="${selDay}" ${used ? "checked" : ""} ${future ? "disabled" : ""} aria-label="${esc(a.name)} an diesem Tag benutzt">
+        <div class="grow">${esc(a.name)}</div>${slotLabel(a.slot)}</div>`;
+    }).join("") || `<div class="empty">Noch keine Wirkstoffe angelegt.</div>`;
+  }
+
+  function renderActives(){
+    $("actives").innerHTML = state.actives.map(a => {
+      const st = statusOf(a);
+      let dots = "";
+      for (let i = 13; i >= 0; i--){ const d = parse(TODAY); d.setDate(d.getDate() - i); const k = iso(d);
+        dots += `<i class="${usedOn(a.id, k) ? "on" : ""}${i === 0 ? " today" : ""}" title="${fmtLong.format(d)}"></i>`; }
+      const used = usedOn(a.id, TODAY);
+      return `<div class="active">
+        <div class="top"><div class="name">${esc(a.name)}</div>${slotLabel(a.slot)}<span class="pill ${st.cls}">${st.text}</span>
+          <button class="x" data-delactive="${a.id}" aria-label="${esc(a.name)} entfernen">×</button></div>
+        <div class="small">${KIND[a.kind] || "Sonstiges"} · alle ${a.every} ${a.every === 1 ? "Tag" : "Tage"} · ${sinceText(a)}</div>
+        <div class="bottom"><div class="dots" aria-label="Letzte 14 Tage">${dots}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <a class="btn ghost" target="_blank" rel="noopener" href="${gcal(a.name + " (Skincare)", nextDue(a), a.slot === "AM" ? "08:00" : "21:00", a.every)}">Erinnerung</a>
+            <button class="btn ${used ? "ok" : ""}" data-use="${a.id}" data-day="${TODAY}">${used ? "✓ Heute benutzt" : "Heute benutzt"}</button></div></div>
+      </div>`;
+    }).join("") || `<div class="panel"><div class="empty">Noch keine Wirkstoffe. Unten einen hinzufügen.</div></div>`;
+    $("reminders").innerHTML = state.reminders.map(r => `<div class="row">
+        <div class="grow"><div>${esc(r.name)}</div><div class="small">alle ${r.every} ${r.every === 1 ? "Tag" : "Tage"} um ${r.time} Uhr</div></div>
+        <a class="btn ghost" target="_blank" rel="noopener" href="${gcal(r.name, r.start, r.time, r.every)}">In Google Kalender</a>
+        <button class="x" data-delrem="${r.id}" aria-label="Erinnerung löschen">×</button></div>`).join("")
+      || `<div class="empty">Noch keine Erinnerungen. Unten eine anlegen, z. B. alle 4 Tage Maske.</div>`;
+  }
+
+  // ---------- events ----------
+  document.addEventListener("click", e => {
+    const t = e.target.closest("[data-view],[data-use],[data-deltodo],[data-delevent],[data-delactive],[data-day-pick],[data-delrem]");
+    if (!t) return;
+    if (t.dataset.delrem){
+      state.reminders = state.reminders.filter(x => x.id !== t.dataset.delrem); save(); render(); return;
+    }
+    if (t.dataset.view){
+      view = t.dataset.view;
+      document.querySelectorAll("nav button").forEach(b => b.setAttribute("aria-selected", b.dataset.view === view));
+      ["heute","kalender","haut"].forEach(v => $("view-" + v).hidden = v !== view);
+      try { localStorage.setItem(KEY + ".tab", view); } catch {}
+    } else if (t.dataset.use){
+      if (t.tagName === "INPUT") e.preventDefault();
+      toggleUse(t.dataset.use, t.dataset.day);
+    } else if (t.dataset.deltodo){
+      state.todos = state.todos.filter(x => x.id !== t.dataset.deltodo); save(); render();
+    } else if (t.dataset.delevent){
+      state.events = state.events.filter(x => x.id !== t.dataset.delevent); save(); render();
+    } else if (t.dataset.delactive){
+      if (t.dataset.armed){ state.actives = state.actives.filter(x => x.id !== t.dataset.delactive); delete state.uses[t.dataset.delactive]; save(); render(); }
+      else { t.dataset.armed = "1"; t.textContent = "Wirklich löschen?"; t.style.fontSize = "13px"; setTimeout(() => render(), 3000); }
+    } else if (t.dataset.dayPick){
+      selDay = t.dataset.dayPick; renderCalendar();
+    }
+  });
+  document.addEventListener("change", e => {
+    const t = e.target;
+    if (t.dataset.todo){ const x = state.todos.find(x => x.id === t.dataset.todo); if (x){ x.done = t.checked; save(); render(); } }
+  });
+  $("todo-form").addEventListener("submit", e => {
+    e.preventDefault(); const v = $("todo-input").value.trim(); if (!v) return;
+    state.todos.unshift({id:uid(), text:v, done:false}); $("todo-input").value = ""; save(); render();
+  });
+  $("clear-done").addEventListener("click", () => { state.todos = state.todos.filter(t => !t.done); save(); render(); });
+  $("event-form").addEventListener("submit", e => {
+    e.preventDefault(); const v = $("event-input").value.trim(); if (!v) return;
+    state.events.push({id:uid(), date:selDay, time:$("event-time").value || "", title:v});
+    $("event-input").value = ""; $("event-time").value = ""; save(); render();
+  });
+  $("active-form").addEventListener("submit", e => {
+    e.preventDefault(); const name = $("active-name").value.trim(); if (!name) return;
+    const every = Math.max(1, Math.min(30, parseInt($("active-every").value, 10) || 1));
+    state.actives.push({id:uid(), name, kind:$("active-kind").value, slot:$("active-slot").value, every});
+    $("active-name").value = ""; $("add-active").open = false; save(); render();
+  });
+  $("rem-form").addEventListener("submit", e => {
+    e.preventDefault(); const name = $("rem-name").value.trim(); if (!name) return;
+    const every = Math.max(1, Math.min(60, parseInt($("rem-every").value, 10) || 1));
+    state.reminders.push({id:uid(), name, every, time:$("rem-time").value || "20:00", start:TODAY});
+    $("rem-name").value = ""; save(); render();
+  });
+  $("prev").addEventListener("click", () => { month.setMonth(month.getMonth() - 1); renderCalendar(); });
+  $("next").addEventListener("click", () => { month.setMonth(month.getMonth() + 1); renderCalendar(); });
+
+  try { const tab = localStorage.getItem(KEY + ".tab"); if (tab && tab !== "heute") document.querySelector(`[data-view="${tab}"]`)?.click(); } catch {}
+  $("backup-export").addEventListener("click", exportBackup);
+  $("backup-import").addEventListener("change", e => { const f = e.target.files[0]; if (f) importBackup(f); e.target.value = ""; });
+
+  render();
+  connect();
+
+  // Tageswechsel: wenn die App über Nacht offen bleibt, neu laden
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && iso(new Date()) !== TODAY) location.reload(); });
+
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
