@@ -97,11 +97,23 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .dots i{width:14px;height:14px;border-radius:4px;background:var(--sunk)}
 .dots i.on{background:var(--ok)}
 .dots i.today{outline:1.5px solid var(--muted);outline-offset:1px}
-.active .bottom{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.active .bottom{display:flex;flex-direction:column;gap:10px}
+.next{font:600 13px var(--body);color:var(--accent)}
+.strip{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:3px}
+.strip span{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.strip i{width:100%;max-width:18px;aspect-ratio:1;border-radius:5px;background:var(--sunk)}
+.strip small{font:500 9px/1 var(--body);color:var(--muted);white-space:nowrap}
+.strip span.today small{color:var(--fg);font-weight:700}
+.strip span.today i{outline:1.5px solid var(--muted);outline-offset:1px}
+.strip span.on i{background:var(--ok)}
+.strip span.plan i{background:none;box-shadow:inset 0 0 0 2px var(--ok)}
+.supp .strip span.on i{background:var(--supp)}
+.supp .strip span.plan i{box-shadow:inset 0 0 0 2px var(--supp)}
+.strip-legend{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:-4px}
 
 /* calendar */
 .calhead{display:flex;align-items:center;justify-content:space-between;padding:12px 14px}
-.calhead b{font:700 18px var(--display)}
+.calhead b{font:700 18px var(--display);cursor:pointer}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 10px 12px}
 .grid .wd{font:600 11px var(--body);color:var(--muted);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:.06em}
 .day{aspect-ratio:1;max-width:100%;border:0;border-radius:10px;background:none;color:var(--fg);font:500 14px var(--body);font-variant-numeric:tabular-nums;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0}
@@ -123,6 +135,44 @@ details summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14p
 details summary::-webkit-details-marker{display:none}
 @media (prefers-reduced-motion:no-preference){.active,.row{transition:background .15s}}
 input,select{font-size:16px}
+[data-hold]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+[data-hold] input,[data-hold] select{-webkit-user-select:auto;user-select:auto}
+.holding{background:var(--sunk)!important}
+@media (prefers-reduced-motion:no-preference){.holding{transition:background .6s}}
+.overlay{position:fixed;inset:0;z-index:50;background:rgb(10 8 16 / .55);display:flex;align-items:flex-end;justify-content:center;
+  padding:16px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;width:100%;max-width:480px;display:flex;flex-direction:column;gap:8px}
+.sheet p#confirm-text{font:600 17px var(--body);margin:0;overflow-wrap:anywhere}
+.sheet-actions{display:flex;gap:10px;margin-top:10px}
+.sheet-actions .btn{flex:1;padding:12px}
+.btn.danger{background:#c0392b;color:#fff}
+.plan-pill{background:var(--sunk);color:var(--muted)}
+.day .m i.plan{background:none!important;box-shadow:inset 0 0 0 1.5px var(--ok)}
+.day .m i.p.plan{box-shadow:inset 0 0 0 1.5px var(--supp)}
+/* Jahresübersicht */
+.yearhead{display:flex;align-items:center;justify-content:space-between;padding:12px 14px}
+.yearhead b{font:700 18px var(--display)}
+.years{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0 10px 12px}
+@media (min-width:520px){.years{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.mini{border:0;background:var(--sunk);border-radius:12px;padding:8px 6px;cursor:pointer;color:var(--fg);font-family:inherit;text-align:left;min-width:0}
+.mini.cur{box-shadow:inset 0 0 0 2px var(--accent)}
+.mini b{display:block;font:600 13px var(--body);margin:0 0 4px 4px}
+.mini .g{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}
+.mini .g span{font:500 9.5px/1 var(--body);font-variant-numeric:tabular-nums;text-align:center;padding:2px 0 3px;border-radius:4px;position:relative;color:var(--muted)}
+.mini .g span.t{background:var(--accent);color:var(--bg);font-weight:700}
+.mini .g span.ev{color:var(--fg);font-weight:700}
+.mini .g span i{position:absolute;left:50%;bottom:0;width:3px;height:3px;border-radius:50%;transform:translateX(-50%)}
+.mini .g span i.e{background:var(--accent)}
+.mini .g span.has-s i.s{background:var(--ok)}
+.mini .g span.has-p i.p{background:var(--supp)}
+.bell{border:1px solid var(--line);background:var(--surface);color:var(--muted);font:600 13px var(--body);padding:9px 12px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.bell.on{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.notif{background:var(--accent-soft);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.notif b{font:700 16px var(--display);color:var(--fg)}
+.notif p{margin:0;font-size:14px;color:var(--fg)}
+.notif .acts{display:flex;gap:8px;flex-wrap:wrap}
+.notif.compact{flex-direction:row;align-items:center;justify-content:space-between;padding:10px 14px;flex-wrap:wrap}
+.calbtn{border:1px solid var(--line);background:var(--surface);color:var(--accent);font:600 13px var(--body);padding:6px 10px;border-radius:999px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -141,6 +191,7 @@ input,select{font-size:16px}
 
   <!-- HEUTE -->
   <section class="view" id="view-heute">
+    <div id="notif-panel"></div>
     <div id="hint-today"></div>
     <div>
       <h2>Skincare heute</h2>
@@ -169,14 +220,27 @@ input,select{font-size:16px}
 
   <!-- KALENDER -->
   <section class="view" id="view-kalender" hidden>
-    <div class="panel">
+    <div class="panel" id="year-panel" hidden>
+      <div class="yearhead">
+        <button class="x" id="yprev" aria-label="Vorheriges Jahr">‹</button>
+        <b id="year-label"></b>
+        <button class="x" id="ynext" aria-label="Nächstes Jahr">›</button>
+      </div>
+      <div class="years" id="years"></div>
+      <div class="legend"><span>Monat antippen zum Öffnen</span></div>
+    </div>
+    <div class="panel" id="month-panel">
       <div class="calhead">
         <button class="x" id="prev" aria-label="Vorheriger Monat">‹</button>
         <b id="month-label"></b>
         <button class="x" id="next" aria-label="Nächster Monat">›</button>
       </div>
+      <div style="display:flex;justify-content:center;gap:8px;margin:-4px 0 8px">
+        <button class="calbtn" type="button" id="open-year">Jahresübersicht</button>
+        <button class="calbtn" type="button" id="go-today">Heute</button>
+      </div>
       <div class="grid" id="grid"></div>
-      <div class="legend"><span><i style="background:var(--accent)"></i>Termin</span><span><i style="background:var(--ok)"></i>Skincare</span><span><i style="background:var(--supp)"></i>Supplements</span></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Termin</span><span><i style="background:var(--ok)"></i>Skincare</span><span><i style="background:var(--supp)"></i>Supplements</span><span><i style="box-shadow:inset 0 0 0 1.5px var(--muted)"></i>Ring = geplant</span></div>
     </div>
     <div>
       <h2 id="sel-label"></h2>
@@ -192,6 +256,8 @@ input,select{font-size:16px}
             <option value="1d" selected>1 Tag vorher</option>
             <option value="custom">Eigene Zeit…</option>
           </select>
+          <label class="timepick small" id="event-at-wrap" hidden>Erinnern am
+            <input type="datetime-local" id="event-at" aria-label="Eigene Erinnerungszeit"></label>
           <button class="btn" type="submit">Eintragen</button>
         </form>
       </div>
@@ -228,7 +294,6 @@ input,select{font-size:16px}
         </form>
       </details>
     </div>
-    <p class="small" style="margin:0"><b>Tipp für pünktliche Erinnerungen:</b> In Google Kalender unter Einstellungen → dein Kalender → Standardbenachrichtigungen „Zum Zeitpunkt des Termins“ wählen. Sonst meldet sich Google 30 Minuten zu früh.</p>
     <p class="small" style="margin:0">„Alle 1 Tage“ heißt täglich. Vergessen einzutragen? Im Kalender den Tag antippen und nachträglich abhaken.</p>
   </section>
 
@@ -273,7 +338,7 @@ input,select{font-size:16px}
           <button class="btn" type="submit">Anlegen</button>
         </form>
       </div>
-      <p class="small" style="margin:8px 0 0">Die Benachrichtigung kommt über Google Kalender: „In Google Kalender“ antippen und dort speichern. Dann meldet sich dein Handy wie bei jedem Termin.</p>
+      <p class="small" style="margin:8px 0 0">Für eigene Dinge, die regelmäßig wiederkommen, z. B. Maske oder Haarkur. Mit 🔔 schaltest du die Benachrichtigung pro Eintrag an oder aus.</p>
     </div>
     <div>
       <h2>Backup</h2>
@@ -289,7 +354,19 @@ input,select{font-size:16px}
     <p class="small" style="margin:0">„Fällig“ heißt: die Pause seit dem letzten Mal ist vorbei. Vergessen einzutragen? Im Kalender den Tag antippen und nachträglich abhaken. Die Kombi-Hinweise sind Faustregeln, keine Hautarzt-Beratung.</p>
   </section>
 
+  <p class="small" style="margin:18px 0 0;text-align:center">Zum Löschen einen Eintrag gedrückt halten.</p>
   <div class="status" id="status">Wird geladen…</div>
+</div>
+
+<div class="overlay" id="confirm" hidden>
+  <div class="sheet" role="alertdialog" aria-modal="true" aria-labelledby="confirm-text">
+    <p id="confirm-text"></p>
+    <p class="small" style="margin:0">Das lässt sich nicht rückgängig machen.</p>
+    <div class="sheet-actions">
+      <button class="btn ghost" type="button" id="confirm-no">Abbrechen</button>
+      <button class="btn danger" type="button" id="confirm-yes">Löschen</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -328,17 +405,6 @@ input,select{font-size:16px}
   }
   const SLOT_TIME = {AM:"08:00", NOON:"13:00", PM:"21:00"};
 
-  // Google-Kalender-Link mit Wiederholung alle N Tage
-  function gcal(title, startDay, time, every, details){
-    const [h, m] = (time || "20:00").split(":").map(Number);
-    const s = parse(startDay); s.setHours(h, m, 0, 0);
-    const e = new Date(s.getTime() + 15 * 60000);
-    const f = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
-    const p = new URLSearchParams({action:"TEMPLATE", text:title, dates:`${f(s)}/${f(e)}`,
-      details: details || "Erinnerung aus dem Planer"});
-    if (every) p.set("recur", `RRULE:FREQ=DAILY;INTERVAL=${every}`);
-    return "https://calendar.google.com/calendar/render?" + p.toString();
-  }
 
   // ---------- Termin-Erinnerungen ----------
   const REMIND = {none:"Keine Erinnerung", start:"Zur Startzeit", "1h":"1 Std. vorher", "1d":"1 Tag vorher", custom:"Eigene Zeit…"};
@@ -355,16 +421,35 @@ input,select{font-size:16px}
       default: return null;
     }
   }
-  function eventGcal(e){
-    const at = remindAt(e); if (!at) return "";
-    const when = parse(e.date).toLocaleDateString("de-DE", {weekday:"short", day:"numeric", month:"numeric"}) + (e.time ? `, ${e.time} Uhr` : "");
-    return gcal(`Erinnerung: ${e.title} (${when})`, iso(at), `${pad(at.getHours())}:${pad(at.getMinutes())}`, null, `Termin: ${e.title}, ${when}`);
-  }
   function nextDue(a){
     const last = lastUse(a.id);
     if (!last) return TODAY;
     const d = parse(last); d.setDate(d.getDate() + a.every);
     const k = iso(d); return k < TODAY ? TODAY : k;
+  }
+  // geplant an diesem Tag? (ab dem nächsten fälligen Tag alle N Tage)
+  function isPlanned(a, day){
+    if (day < TODAY) return false;
+    const n = nextDue(a); if (day < n) return false;
+    return daysBetween(n, day) % (a.every || 1) === 0;
+  }
+  const fmtDay = new Intl.DateTimeFormat("de-DE", {weekday:"short", day:"numeric", month:"numeric"});
+  // Wochenstreifen: 6 Tage zurück, heute, 7 Tage voraus
+  const WD = ["So","Mo","Di","Mi","Do","Fr","Sa"];
+  function strip(a){
+    let cells = "";
+    for (let i = -6; i <= 7; i++){
+      const d = parse(TODAY); d.setDate(d.getDate() + i); const k = iso(d);
+      const cls = usedOn(a.id, k) ? "on" : (i > 0 || (i === 0 && !usedOn(a.id, k))) && isPlanned(a, k) ? "plan" : "";
+      cells += `<span class="${cls}${i === 0 ? " today" : ""}" title="${fmtLong.format(d)}"><i></i><small>${WD[d.getDay()]}</small></span>`;
+    }
+    return `<div class="strip" aria-label="Letzte und nächste Woche">${cells}</div>
+      <div class="strip-legend"><span>← letzte Woche</span><span>nächste Woche →</span></div>`;
+  }
+  function nextText(a){
+    const n = nextDue(a), d = daysBetween(TODAY, n);
+    if (d === 0) return usedOn(a.id, TODAY) ? "" : "Nächstes Mal: heute";
+    return d === 1 ? `Nächstes Mal: morgen (${fmtDay.format(parse(n))})` : `Nächstes Mal: in ${d} Tagen (${fmtDay.format(parse(n))})`;
   }
 
   // ---------- persistence (nur auf diesem Gerät) ----------
@@ -373,6 +458,101 @@ input,select{font-size:16px}
   function save(){
     try { localStorage.setItem(KEY, JSON.stringify(state)); setStatus("Gespeichert auf diesem Handy"); }
     catch { setStatus("Speichern hat nicht geklappt. Ist der Speicher voll?"); }
+    schedulePush();
+  }
+
+  // ---------- Benachrichtigungen (Web Push über eigenen Server) ----------
+  const PUSH_URL = "https://buesra-planer-push.vladislav-brznv.workers.dev";
+  const VAPID = "BEV38QuVlzLqsSJMJuTn36cFuwLC0YHs9GWy7X5SrsLQTjvA1tXO5-EagGGBsbXv1VHtndidFikjbs_g8XAfJZU";
+  const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
+  const lsSet = (k, v) => { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} };
+  let deviceId = lsGet("planer.device");
+  if (!deviceId){ deviceId = (uid() + uid() + uid()).replace(/[^a-z0-9]/g, "").slice(0, 24).padEnd(12, "x"); lsSet("planer.device", deviceId); }
+  const pushSupported = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  const pushOn = () => pushSupported() && lsGet("planer.push") === "1" && Notification.permission === "granted";
+  let pushMsg = "";
+
+  function bellBtn(item){
+    const on = item.notify !== false;
+    return `<button class="bell${on ? " on" : ""}" type="button" data-bell="${item.id}" aria-pressed="${on}">${on ? "🔔 an" : "🔕 aus"}</button>`;
+  }
+  function buildRules(){
+    const rules = [], now = new Date();
+    for (const a of state.actives) if (a.notify !== false)
+      rules.push({k:"r", t:`${a.name} ist heute dran`, b:`Skincare · ${a.slot === "AM" ? "morgens" : "abends"}`, at:a.time || SLOT_TIME[a.slot] || "21:00", from:nextDue(a), every:a.every, tag:"a" + a.id});
+    for (const a of state.supps) if (a.notify !== false)
+      rules.push({k:"r", t:`${a.name} nehmen`, b:"Supplement", at:a.time || SLOT_TIME[a.slot] || "08:00", from:nextDue(a), every:a.every, tag:"s" + a.id});
+    for (const r of state.reminders) if (r.notify !== false)
+      rules.push({k:"r", t:r.name, b:"Erinnerung", at:r.time, from:r.start, every:r.every, tag:"r" + r.id});
+    for (const e of state.events){
+      const at = remindAt(e); if (!at || at <= now) continue;
+      const when = fmtDay.format(parse(e.date)) + (e.time ? ` um ${e.time} Uhr` : "");
+      rules.push({k:"o", t:`📅 ${e.title}`, b:when, when:toLocalInput(at), tag:"e" + e.id});
+    }
+    return rules;
+  }
+  const urlB64 = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0));
+  async function currentSub(){ const reg = await navigator.serviceWorker.ready; return reg.pushManager.getSubscription(); }
+  async function post(path, data){
+    const r = await fetch(PUSH_URL + path, {method:"POST", headers:{"content-type":"text/plain"}, body:JSON.stringify(data)});
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || "Server antwortet nicht");
+    return j;
+  }
+  let pushTimer = null;
+  function schedulePush(){ clearTimeout(pushTimer); pushTimer = setTimeout(() => syncPush(false), 1200); }
+  async function syncPush(force){
+    if (!pushOn()) return;
+    try {
+      const sub = await currentSub(); if (!sub) return;
+      const body = JSON.stringify({id:deviceId, sub:sub.toJSON(), tz:Intl.DateTimeFormat().resolvedOptions().timeZone, rules:buildRules()});
+      if (!force && body === lsGet("planer.lastsync")) return;
+      await post("/sync", JSON.parse(body));
+      lsSet("planer.lastsync", body);
+    } catch { /* offline: beim nächsten Öffnen erneut */ }
+  }
+  async function enablePush(){
+    pushMsg = "";
+    if (!pushSupported()){ pushMsg = "Dieses Handy oder dieser Browser kann keine Benachrichtigungen. Öffne die App über das Icon auf dem Homescreen."; return renderNotif(); }
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted"){ renderNotif(); return; }
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:urlB64(VAPID)}));
+      lsSet("planer.push", "1");
+      await syncPush(true);
+      await post("/test", {id:deviceId});
+      pushMsg = "Eingeschaltet. Du solltest gleich eine Test-Benachrichtigung bekommen.";
+    } catch (e) {
+      pushMsg = "Das Einschalten hat nicht geklappt: " + (e.message || e) + ". Bist du online?";
+    }
+    renderNotif();
+  }
+  async function testPush(){
+    try { await syncPush(true); await post("/test", {id:deviceId}); pushMsg = "Test geschickt. Kommt sie nicht an, prüfe in den Handy-Einstellungen, ob die App Benachrichtigungen darf."; }
+    catch (e) { pushMsg = "Test hat nicht geklappt: " + (e.message || e); }
+    renderNotif();
+  }
+  async function disablePush(){
+    try { const sub = await currentSub(); await sub?.unsubscribe(); } catch {}
+    try { await post("/remove", {id:deviceId}); } catch {}
+    lsSet("planer.push", null); lsSet("planer.lastsync", null);
+    pushMsg = "Benachrichtigungen sind aus."; renderNotif();
+  }
+  function renderNotif(){
+    const el = document.getElementById("notif-panel"); if (!el) return;
+    const msg = pushMsg ? `<p class="small" style="margin:0;color:var(--muted)">${esc(pushMsg)}</p>` : "";
+    if (pushOn()){
+      el.innerHTML = `<div class="notif compact"><span class="small" style="color:var(--fg)">🔔 Benachrichtigungen sind an</span>
+        <div class="acts"><button class="btn ghost sm" type="button" data-notif="test">Test</button><button class="btn ghost sm" type="button" data-notif="off">Ausschalten</button></div>${msg}</div>`;
+    } else if (pushSupported() && Notification.permission === "denied"){
+      el.innerHTML = `<div class="notif"><b>Benachrichtigungen blockiert</b>
+        <p>Erlaube sie in den Handy-Einstellungen: Apps → Büsra's Planer (bzw. Chrome) → Benachrichtigungen → an. Danach die App neu öffnen.</p>${msg}</div>`;
+    } else {
+      el.innerHTML = `<div class="notif"><b>Erinnerungen aufs Handy</b>
+        <p>Die App meldet sich, wenn Skincare oder Supplements dran sind und vor deinen Terminen. Pro Eintrag kannst du das mit 🔔 an- oder ausschalten.</p>
+        <div class="acts"><button class="btn" type="button" data-notif="on">Benachrichtigungen einschalten</button></div>${msg}</div>`;
+    }
   }
   async function connect(){
     // Browser bitten, die Daten nicht automatisch zu löschen
@@ -451,17 +631,15 @@ input,select{font-size:16px}
   function renderSupps(){
     $("supps").innerHTML = state.supps.map(a => {
       const st = statusOf(a, "genommen"), used = usedOn(a.id, TODAY);
-      let dots = "";
-      for (let i = 13; i >= 0; i--){ const d = parse(TODAY); d.setDate(d.getDate() - i); const k = iso(d);
-        dots += `<i class="${usedOn(a.id, k) ? "on" : ""}${i === 0 ? " today" : ""}" title="${fmtLong.format(d)}"></i>`; }
-      return `<div class="active supp">
-        <div class="top"><div class="name">${esc(a.name)}</div>${slotLabel(a.slot)}<span class="pill ${st.cls}">${st.text}</span>
-          <button class="x" data-delsupp="${a.id}" aria-label="${esc(a.name)} entfernen">×</button></div>
+      const dots = strip(a);
+      return `<div class="active supp" data-hold="supp:${a.id}" data-holdname="${esc(a.name)}">
+        <div class="top"><div class="name">${esc(a.name)}</div>${slotLabel(a.slot)}<span class="pill ${st.cls}">${st.text}</span></div>
         <div class="small">${a.every === 1 ? "täglich" : `alle ${a.every} Tage`} · ${sinceText(a, "genommen")}</div>
-        <div class="bottom"><div class="dots" aria-label="Letzte 14 Tage">${dots}</div>
+        ${nextText(a) ? `<div class="next">${nextText(a)}</div>` : ""}
+        <div class="bottom">${dots}
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <label class="timepick small">um <input type="time" data-itemtime="${a.id}" value="${a.time || SLOT_TIME[a.slot] || "08:00"}" aria-label="Uhrzeit der Erinnerung"></label>
-            <a class="btn ghost" target="_blank" rel="noopener" href="${gcal(a.name + " (Supplement)", nextDue(a), a.time || SLOT_TIME[a.slot] || "08:00", a.every)}">Erinnerung</a>
+            ${bellBtn(a)}
             <button class="btn ${used ? "supp-ok" : ""}" data-use="${a.id}" data-day="${TODAY}">${used ? "✓ Genommen" : "Genommen"}</button></div></div>
       </div>`;
     }).join("") || `<div class="panel"><div class="empty">Noch keine Supplements. Unten eins hinzufügen, z. B. Vitamin D oder Magnesium.</div></div>`;
@@ -473,7 +651,7 @@ input,select{font-size:16px}
       return `<div class="row${used ? " done" : ""}">
         <input type="checkbox" class="check supp" data-use="${a.id}" data-day="${day}" ${used ? "checked" : ""} ${disabled ? "disabled" : ""} aria-label="${esc(a.name)} genommen">
         <div class="grow"><div>${esc(a.name)}</div>
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px">${slotLabel(a.slot)}${day === TODAY ? `<span class="pill ${st.cls}">${st.text}</span>` : ""}</div></div></div>`;
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px">${slotLabel(a.slot)}${day === TODAY ? `<span class="pill ${st.cls}">${st.text}</span>` : day > TODAY && isPlanned(a, day) ? '<span class="pill plan-pill">Geplant</span>' : ""}</div></div></div>`;
     }).join("");
   }
 
@@ -483,7 +661,7 @@ input,select{font-size:16px}
       const st = statusOf(a), used = usedOn(a.id, TODAY);
       return `<div class="row${used ? " done" : ""}">
         <input type="checkbox" class="check" data-use="${a.id}" data-day="${TODAY}" ${used ? "checked" : ""} aria-label="${esc(a.name)} heute benutzt">
-        <div class="grow"><div>${esc(a.name)}</div><div class="small">${sinceText(a)}</div>
+        <div class="grow"><div>${esc(a.name)}</div><div class="small">${sinceText(a)}${nextText(a) && !nextText(a).endsWith("heute") ? " · " + nextText(a) : ""}</div>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px">${slotLabel(a.slot)}<span class="pill ${st.cls}">${st.text}</span></div></div></div>`;
     });
     $("today-skin").innerHTML = rows.join("") || `<div class="empty">Noch keine Wirkstoffe. Im Tab „Haut“ anlegen.</div>`;
@@ -499,28 +677,25 @@ input,select{font-size:16px}
 
     // todos
     const open = state.todos.filter(t => !t.done), done = state.todos.filter(t => t.done);
-    $("todos").innerHTML = [...open, ...done].map(t => `<div class="row${t.done ? " done" : ""}">
+    $("todos").innerHTML = [...open, ...done].map(t => `<div class="row${t.done ? " done" : ""}" data-hold="todo:${t.id}" data-holdname="${esc(t.text)}">
         <input type="checkbox" class="check" data-todo="${t.id}" ${t.done ? "checked" : ""} aria-label="Erledigt">
-        <div class="grow">${esc(t.text)}</div>
-        <button class="x" data-deltodo="${t.id}" aria-label="Löschen">×</button></div>`).join("")
+        <div class="grow">${esc(t.text)}</div></div>`).join("")
       || `<div class="empty">Alles erledigt. Oder noch nichts eingetragen.</div>`;
     $("clear-done").hidden = !done.length;
   }
 
   function eventRow(e){
-    const mode = e.remind || "none", at = remindAt(e), link = eventGcal(e);
+    const mode = e.remind || "none", at = remindAt(e);
     const opts = Object.entries(REMIND).map(([k, v]) => `<option value="${k}" ${k === mode ? "selected" : ""}>${v}</option>`).join("");
-    return `<div class="row" style="align-items:flex-start"><span class="time" style="padding-top:2px">${e.time || "–"}</span>
+    return `<div class="row" style="align-items:flex-start" data-hold="event:${e.id}" data-holdname="${esc(e.title)}"><span class="time" style="padding-top:2px">${e.time || "–"}</span>
       <div class="grow" style="display:flex;flex-direction:column;gap:8px">
         <div>${esc(e.title)}</div>
         <div class="remind">
           <select data-remind="${e.id}" aria-label="Erinnerung für ${esc(e.title)}">${opts}</select>
           ${mode === "custom" ? `<input type="datetime-local" data-remat="${e.id}" value="${e.at || ""}" aria-label="Erinnerungszeit">` : ""}
         </div>
-        ${at ? `<div class="remind"><span class="small">🔔 ${fmtShort.format(at)} Uhr</span>
-          <a class="btn ghost sm" target="_blank" rel="noopener" href="${link}">In Google Kalender</a></div>` : ""}
-      </div>
-      <button class="x" data-delevent="${e.id}" aria-label="Termin löschen">×</button></div>`;
+        ${at ? `<div class="remind"><span class="small">🔔 Erinnerung: ${fmtShort.format(at)} Uhr${at < new Date() ? " (vorbei)" : ""}</span></div>` : ""}
+      </div></div>`;
   }
 
   function renderCalendar(){
@@ -534,8 +709,10 @@ input,select{font-size:16px}
       const hasEv = state.events.some(e => e.date === k);
       const hasSkin = state.actives.some(a => usedOn(a.id, k));
       const hasSupp = state.supps.some(a => usedOn(a.id, k));
+      const planSkin = !hasSkin && k > TODAY && state.actives.some(a => isPlanned(a, k));
+      const planSupp = !hasSupp && k > TODAY && state.supps.some(a => isPlanned(a, k));
       const cls = ["day", d.getMonth() !== month.getMonth() && "other", k === TODAY && "today", k === selDay && "sel"].filter(Boolean).join(" ");
-      html += `<button class="${cls}" data-day-pick="${k}" aria-label="${fmtLong.format(d)}">${d.getDate()}<span class="m">${hasEv ? "<i></i>" : ""}${hasSkin ? '<i class="s"></i>' : ""}${hasSupp ? '<i class="p"></i>' : ""}</span></button>`;
+      html += `<button class="${cls}" data-day-pick="${k}" aria-label="${fmtLong.format(d)}">${d.getDate()}<span class="m">${hasEv ? "<i></i>" : ""}${hasSkin ? '<i class="s"></i>' : planSkin ? '<i class="s plan"></i>' : ""}${hasSupp ? '<i class="p"></i>' : planSupp ? '<i class="p plan"></i>' : ""}</span></button>`;
     }
     $("grid").innerHTML = html;
     $("sel-label").textContent = selDay === TODAY ? "Heute" : fmtLong.format(parse(selDay));
@@ -546,7 +723,7 @@ input,select{font-size:16px}
       const used = usedOn(a.id, selDay);
       return `<div class="row${used ? " done" : ""}">
         <input type="checkbox" class="check" data-use="${a.id}" data-day="${selDay}" ${used ? "checked" : ""} ${future ? "disabled" : ""} aria-label="${esc(a.name)} an diesem Tag benutzt">
-        <div class="grow">${esc(a.name)}</div>${slotLabel(a.slot)}</div>`;
+        <div class="grow">${esc(a.name)}</div>${future && isPlanned(a, selDay) ? '<span class="pill plan-pill">Geplant</span>' : ""}${slotLabel(a.slot)}</div>`;
     }).join("") || `<div class="empty">Noch keine Wirkstoffe angelegt.</div>`;
     $("sel-supps").innerHTML = suppRows(selDay, future) || `<div class="empty">Noch keine Supplements angelegt.</div>`;
   }
@@ -554,39 +731,42 @@ input,select{font-size:16px}
   function renderActives(){
     $("actives").innerHTML = state.actives.map(a => {
       const st = statusOf(a);
-      let dots = "";
-      for (let i = 13; i >= 0; i--){ const d = parse(TODAY); d.setDate(d.getDate() - i); const k = iso(d);
-        dots += `<i class="${usedOn(a.id, k) ? "on" : ""}${i === 0 ? " today" : ""}" title="${fmtLong.format(d)}"></i>`; }
+      const dots = strip(a);
       const used = usedOn(a.id, TODAY);
-      return `<div class="active">
-        <div class="top"><div class="name">${esc(a.name)}</div>${slotLabel(a.slot)}<span class="pill ${st.cls}">${st.text}</span>
-          <button class="x" data-delactive="${a.id}" aria-label="${esc(a.name)} entfernen">×</button></div>
+      return `<div class="active" data-hold="active:${a.id}" data-holdname="${esc(a.name)}">
+        <div class="top"><div class="name">${esc(a.name)}</div>${slotLabel(a.slot)}<span class="pill ${st.cls}">${st.text}</span></div>
         <div class="small">${KIND[a.kind] || "Sonstiges"} · alle ${a.every} ${a.every === 1 ? "Tag" : "Tage"} · ${sinceText(a)}</div>
-        <div class="bottom"><div class="dots" aria-label="Letzte 14 Tage">${dots}</div>
+        ${nextText(a) ? `<div class="next">${nextText(a)}</div>` : ""}
+        <div class="bottom">${dots}
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <label class="timepick small">um <input type="time" data-itemtime="${a.id}" value="${a.time || SLOT_TIME[a.slot] || "21:00"}" aria-label="Uhrzeit der Erinnerung"></label>
-            <a class="btn ghost" target="_blank" rel="noopener" href="${gcal(a.name + " (Skincare)", nextDue(a), a.time || SLOT_TIME[a.slot] || "21:00", a.every)}">Erinnerung</a>
+            ${bellBtn(a)}
             <button class="btn ${used ? "ok" : ""}" data-use="${a.id}" data-day="${TODAY}">${used ? "✓ Heute benutzt" : "Heute benutzt"}</button></div></div>
       </div>`;
     }).join("") || `<div class="panel"><div class="empty">Noch keine Wirkstoffe. Unten einen hinzufügen.</div></div>`;
-    $("reminders").innerHTML = state.reminders.map(r => `<div class="row">
+    $("reminders").innerHTML = state.reminders.map(r => `<div class="row" data-hold="rem:${r.id}" data-holdname="${esc(r.name)}">
         <div class="grow"><div>${esc(r.name)}</div><div class="small">alle ${r.every} ${r.every === 1 ? "Tag" : "Tage"} um ${r.time} Uhr</div></div>
-        <a class="btn ghost" target="_blank" rel="noopener" href="${gcal(r.name, r.start, r.time, r.every)}">In Google Kalender</a>
-        <button class="x" data-delrem="${r.id}" aria-label="Erinnerung löschen">×</button></div>`).join("")
+        ${bellBtn(r)}</div>`).join("")
       || `<div class="empty">Noch keine Erinnerungen. Unten eine anlegen, z. B. alle 4 Tage Maske.</div>`;
   }
 
   // ---------- events ----------
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-view],[data-use],[data-deltodo],[data-delevent],[data-delactive],[data-day-pick],[data-delrem],[data-delsupp]");
+    if (suppressClick){ suppressClick = false; e.preventDefault(); e.stopPropagation(); return; }
+    const t = e.target.closest("[data-view],[data-use],[data-day-pick],[data-month-pick],[data-bell],[data-notif]");
     if (!t) return;
-    if (t.dataset.delsupp){
-      if (t.dataset.armed){ state.supps = state.supps.filter(x => x.id !== t.dataset.delsupp); delete state.uses[t.dataset.delsupp]; save(); render(); }
-      else { t.dataset.armed = "1"; t.textContent = "Wirklich löschen?"; t.style.fontSize = "13px"; setTimeout(() => render(), 3000); }
+    if (t.dataset.notif){
+      ({on:enablePush, test:testPush, off:disablePush})[t.dataset.notif]?.(); return;
+    }
+    if (t.dataset.bell){
+      const it = [...state.actives, ...state.supps, ...state.reminders].find(x => x.id === t.dataset.bell);
+      if (it){ it.notify = it.notify === false; save(); render(); }
+      if (it && it.notify && !pushOn()){ view = "heute"; document.querySelector('[data-view="heute"]').click(); pushMsg = "Schalte zuerst die Benachrichtigungen ein."; renderNotif(); window.scrollTo(0, 0); }
       return;
     }
-    if (t.dataset.delrem){
-      state.reminders = state.reminders.filter(x => x.id !== t.dataset.delrem); save(); render(); return;
+    if (t.dataset.monthPick){
+      const [y, m] = t.dataset.monthPick.split("-").map(Number);
+      month = new Date(y, m - 1, 1); showYear(false); renderCalendar(); return;
     }
     if (t.dataset.view){
       view = t.dataset.view;
@@ -596,16 +776,48 @@ input,select{font-size:16px}
     } else if (t.dataset.use){
       if (t.tagName === "INPUT") e.preventDefault();
       toggleUse(t.dataset.use, t.dataset.day);
-    } else if (t.dataset.deltodo){
-      state.todos = state.todos.filter(x => x.id !== t.dataset.deltodo); save(); render();
-    } else if (t.dataset.delevent){
-      state.events = state.events.filter(x => x.id !== t.dataset.delevent); save(); render();
-    } else if (t.dataset.delactive){
-      if (t.dataset.armed){ state.actives = state.actives.filter(x => x.id !== t.dataset.delactive); delete state.uses[t.dataset.delactive]; save(); render(); }
-      else { t.dataset.armed = "1"; t.textContent = "Wirklich löschen?"; t.style.fontSize = "13px"; setTimeout(() => render(), 3000); }
     } else if (t.dataset.dayPick){
-      selDay = t.dataset.dayPick; renderCalendar();
+      selDay = t.dataset.dayPick; $("event-at").value = ""; syncEventAt(); renderCalendar();
     }
+  });
+
+  // ---------- Löschen: gedrückt halten + Rückfrage ----------
+  const LABEL = {todo:"To-do", event:"Termin", active:"Wirkstoff", supp:"Supplement", rem:"Erinnerung"};
+  let holdTimer = null, holdEl = null, holdStart = null, suppressClick = false, pendingDel = null;
+  const ignoreHold = el => el.closest("input,select,button,a,label,textarea");
+  document.addEventListener("pointerdown", e => {
+    const el = e.target.closest("[data-hold]");
+    if (!el || ignoreHold(e.target)) return;
+    holdEl = el; holdStart = [e.clientX, e.clientY]; el.classList.add("holding");
+    holdTimer = setTimeout(() => {
+      el.classList.remove("holding"); suppressClick = true;
+      try { navigator.vibrate?.(25); } catch {}
+      askDelete(el.dataset.hold, el.dataset.holdname);
+    }, 600);
+  });
+  const cancelHold = () => { clearTimeout(holdTimer); holdTimer = null; holdEl?.classList.remove("holding"); holdEl = null; };
+  document.addEventListener("pointerup", cancelHold);
+  document.addEventListener("pointercancel", cancelHold);
+  document.addEventListener("pointermove", e => {
+    if (holdStart && holdEl && Math.hypot(e.clientX - holdStart[0], e.clientY - holdStart[1]) > 10) cancelHold();
+  });
+  document.addEventListener("contextmenu", e => { if (e.target.closest("[data-hold]")) e.preventDefault(); });
+  function askDelete(key, name){
+    pendingDel = key;
+    const [type] = key.split(":");
+    $("confirm-text").textContent = `${LABEL[type] || "Eintrag"} „${name}“ löschen?`;
+    $("confirm").hidden = false; $("confirm-no").focus();
+  }
+  function closeConfirm(){ $("confirm").hidden = true; pendingDel = null; setTimeout(() => suppressClick = false, 50); }
+  $("confirm-no").addEventListener("click", closeConfirm);
+  $("confirm").addEventListener("click", e => { if (e.target.id === "confirm") closeConfirm(); });
+  $("confirm-yes").addEventListener("click", () => {
+    if (!pendingDel) return closeConfirm();
+    const [type, id] = pendingDel.split(":");
+    const list = {todo:"todos", event:"events", active:"actives", supp:"supps", rem:"reminders"}[type];
+    state[list] = state[list].filter(x => x.id !== id);
+    if (type === "active" || type === "supp") delete state.uses[id];
+    save(); render(); closeConfirm();
   });
   document.addEventListener("change", e => {
     const t = e.target;
@@ -630,10 +842,23 @@ input,select{font-size:16px}
   $("event-form").addEventListener("submit", e => {
     e.preventDefault(); const v = $("event-input").value.trim(); if (!v) return;
     const ev = {id:uid(), date:selDay, time:$("event-time").value || "", title:v, remind:$("event-remind").value};
-    if (ev.remind === "custom"){ const d = eventStart(ev); d.setDate(d.getDate() - 1); ev.at = toLocalInput(d); }
+    if (ev.remind === "custom"){
+      if ($("event-at").value) ev.at = $("event-at").value;
+      else { const d = eventStart(ev); d.setDate(d.getDate() - 1); ev.at = toLocalInput(d); }
+    }
     state.events.push(ev);
-    $("event-input").value = ""; $("event-time").value = ""; save(); render();
+    $("event-input").value = ""; $("event-time").value = ""; $("event-at").value = ""; save(); render();
   });
+  function syncEventAt(){
+    const custom = $("event-remind").value === "custom";
+    $("event-at-wrap").hidden = !custom;
+    if (custom && !$("event-at").value){
+      const d = eventStart({date:selDay, time:$("event-time").value}); d.setDate(d.getDate() - 1);
+      $("event-at").value = toLocalInput(d);
+    }
+  }
+  $("event-remind").addEventListener("change", syncEventAt);
+  $("event-time").addEventListener("change", () => { if ($("event-remind").value === "custom"){ $("event-at").value = ""; syncEventAt(); } });
   $("active-form").addEventListener("submit", e => {
     e.preventDefault(); const name = $("active-name").value.trim(); if (!name) return;
     const every = Math.max(1, Math.min(30, parseInt($("active-every").value, 10) || 1));
@@ -652,6 +877,39 @@ input,select{font-size:16px}
     state.reminders.push({id:uid(), name, every, time:$("rem-time").value || "20:00", start:TODAY});
     $("rem-name").value = ""; save(); render();
   });
+  // ---------- Jahresübersicht ----------
+  let year = month.getFullYear();
+  const MONTHS = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+  function showYear(on){
+    $("year-panel").hidden = !on; $("month-panel").hidden = on;
+    if (on){ year = month.getFullYear(); renderYear(); }
+  }
+  function renderYear(){
+    $("year-label").textContent = year;
+    const evDays = new Set(state.events.map(e => e.date));
+    const skin = new Set(), supp = new Set();
+    for (const a of state.actives) for (const d of state.uses[a.id] || []) skin.add(d);
+    for (const a of state.supps) for (const d of state.uses[a.id] || []) supp.add(d);
+    let html = "";
+    for (let m = 0; m < 12; m++){
+      const first = new Date(year, m, 1), off = (first.getDay() + 6) % 7, days = new Date(year, m + 1, 0).getDate();
+      let g = "<span></span>".repeat(off);
+      for (let d = 1; d <= days; d++){
+        const k = `${year}-${pad(m+1)}-${pad(d)}`;
+        const cls = [k === TODAY && "t", evDays.has(k) && "ev", skin.has(k) && "has-s", supp.has(k) && "has-p"].filter(Boolean).join(" ");
+        const dot = evDays.has(k) ? '<i class="e"></i>' : skin.has(k) ? '<i class="s"></i>' : supp.has(k) ? '<i class="p"></i>' : "";
+        g += `<span class="${cls}">${d}${dot}</span>`;
+      }
+      const cur = year === month.getFullYear() && m === month.getMonth();
+      html += `<button class="mini${cur ? " cur" : ""}" type="button" data-month-pick="${year}-${pad(m+1)}"><b>${MONTHS[m]}</b><div class="g">${g}</div></button>`;
+    }
+    $("years").innerHTML = html;
+  }
+  $("open-year").addEventListener("click", () => showYear(true));
+  $("month-label").addEventListener("click", () => showYear(true));
+  $("go-today").addEventListener("click", () => { month = parse(TODAY); month.setDate(1); selDay = TODAY; renderCalendar(); });
+  $("yprev").addEventListener("click", () => { year--; renderYear(); });
+  $("ynext").addEventListener("click", () => { year++; renderYear(); });
   $("prev").addEventListener("click", () => { month.setMonth(month.getMonth() - 1); renderCalendar(); });
   $("next").addEventListener("click", () => { month.setMonth(month.getMonth() + 1); renderCalendar(); });
 
@@ -661,6 +919,9 @@ input,select{font-size:16px}
 
   render();
   connect();
+  renderNotif();
+  syncPush(false);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) syncPush(false); });
 
   // Tageswechsel: wenn die App über Nacht offen bleibt, neu laden
   document.addEventListener("visibilitychange", () => { if (!document.hidden && iso(new Date()) !== TODAY) location.reload(); });
