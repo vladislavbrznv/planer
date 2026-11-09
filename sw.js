@@ -1,10 +1,11 @@
 // Offline-Cache für Büsra's Planer.
 // Bei einem Update der App: VERSION hochzählen, dann lädt das Handy die neuen Dateien.
-const VERSION = "planer-v4";
+const VERSION = "planer-v5";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  // cache: "reload" umgeht den Browser-Zwischenspeicher, damit wirklich die neuen Dateien landen
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES.map(f => new Request(f, {cache: "reload"})))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", e => {
@@ -35,7 +36,7 @@ self.addEventListener("fetch", e => {
   // Eigene Dateien: erst Cache (offline), im Hintergrund aktualisieren
   e.respondWith(caches.open(VERSION).then(async c => {
     const hit = await c.match(req, {ignoreSearch: true});
-    const net = fetch(req).then(res => { if (res.ok) c.put(req, res.clone()); return res; }).catch(() => null);
+    const net = fetch(req, {cache: "no-cache"}).then(res => { if (res.ok) c.put(req, res.clone()); return res; }).catch(() => null);
     return hit || (await net) || c.match("./index.html");
   }));
 });
