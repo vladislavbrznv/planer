@@ -20,16 +20,19 @@
 :root{
   --bg:#f3f2f7; --surface:#ffffff; --sunk:#e9e7f0; --fg:#1f1b2c; --muted:#6c6680; --line:#dcd9e5;
   --accent:#5b3d8f; --accent-soft:#ece5f7; --ok:#1f7a5a; --ok-soft:#dcf1e8; --warn:#a2560f; --warn-soft:#fbead6;
+  --supp:#c2410c; --supp-soft:#fde8dc;
   --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body:"Figtree", "Segoe UI", system-ui, sans-serif;
   --r:14px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#14121b; --surface:#1d1a27; --sunk:#262233; --fg:#ece9f5; --muted:#9e97b3; --line:#332e44;
-  --accent:#b9a0ea; --accent-soft:#2e2642; --ok:#6fd3a8; --ok-soft:#173329; --warn:#f0b26e; --warn-soft:#3a2817; color-scheme:dark}}
+  --accent:#b9a0ea; --accent-soft:#2e2642; --ok:#6fd3a8; --ok-soft:#173329; --warn:#f0b26e; --warn-soft:#3a2817;
+  --supp:#ff9e6b; --supp-soft:#3b2219; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#14121b; --surface:#1d1a27; --sunk:#262233; --fg:#ece9f5; --muted:#9e97b3; --line:#332e44;
-  --accent:#b9a0ea; --accent-soft:#2e2642; --ok:#6fd3a8; --ok-soft:#173329; --warn:#f0b26e; --warn-soft:#3a2817; color-scheme:dark}
+  --accent:#b9a0ea; --accent-soft:#2e2642; --ok:#6fd3a8; --ok-soft:#173329; --warn:#f0b26e; --warn-soft:#3a2817;
+  --supp:#ff9e6b; --supp-soft:#3b2219; color-scheme:dark}
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;padding-top:env(safe-area-inset-top, 0px);padding-bottom:env(safe-area-inset-bottom, 0px);background:var(--bg)}
@@ -42,8 +45,9 @@ header{padding-block:22px 6px;display:flex;align-items:baseline;justify-content:
 h1{font:700 30px/1 var(--display);margin:0;letter-spacing:-.02em;text-wrap:balance}
 h1 span{color:var(--accent)}
 .date{color:var(--muted);font-size:14px}
-nav{position:sticky;top:env(safe-area-inset-top, 0px);z-index:5;background:var(--bg);padding-block:10px;display:flex;gap:6px}
-nav button{flex:1;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 14px var(--body);padding:10px 8px;border-radius:999px;cursor:pointer}
+nav{position:sticky;top:env(safe-area-inset-top, 0px);z-index:5;background:var(--bg);padding-block:10px;display:flex;gap:5px}
+nav button{flex:1 1 0;min-width:0;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 clamp(12px, 3.4vw, 14px) var(--body);padding:10px 2px;border-radius:999px;cursor:pointer;white-space:nowrap}
+nav button#tab-supps{flex-grow:1.35}
 nav button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
 button{font-family:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -67,7 +71,7 @@ form.add input[type=text]{flex:1 1 160px}
 .check{appearance:none;width:22px;height:22px;border:2px solid var(--line);border-radius:7px;flex:none;cursor:pointer;display:grid;place-content:center;margin:0}
 .check:checked{background:var(--ok);border-color:var(--ok)}
 .check:checked::after{content:"";width:6px;height:11px;border:solid var(--bg);border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
-.done .grow{text-decoration:line-through;color:var(--muted)}
+.done .grow > div:first-child{text-decoration:line-through;color:var(--muted)}
 .pill{font:600 12px var(--body);padding:4px 9px;border-radius:999px;white-space:nowrap}
 .pill.ok{background:var(--ok-soft);color:var(--ok)}
 .pill.due{background:var(--accent-soft);color:var(--accent)}
@@ -102,6 +106,11 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .day .m{display:flex;gap:2px;height:5px}
 .day .m i{width:5px;height:5px;border-radius:50%;background:var(--accent)}
 .day .m i.s{background:var(--ok)}
+.day .m i.p{background:var(--supp)}
+.supp .dots i.on{background:var(--supp)}
+.btn.supp-ok{background:var(--supp-soft);color:var(--supp)}
+.pill.supp-ok{background:var(--supp-soft);color:var(--supp)}
+.check.supp:checked{background:var(--supp);border-color:var(--supp)}
 .day.sel .m i{background:var(--bg)}
 .legend{display:flex;gap:14px;padding:0 14px 12px;font-size:12px;color:var(--muted)}
 .legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:1px}
@@ -122,6 +131,7 @@ input,select{font-size:16px}
     <button role="tab" id="tab-heute" data-view="heute" aria-selected="true">Heute</button>
     <button role="tab" id="tab-kalender" data-view="kalender" aria-selected="false">Kalender</button>
     <button role="tab" id="tab-haut" data-view="haut" aria-selected="false">Haut</button>
+    <button role="tab" id="tab-supps" data-view="supps" aria-selected="false">Supplements</button>
   </nav>
 
   <!-- HEUTE -->
@@ -130,6 +140,10 @@ input,select{font-size:16px}
     <div>
       <h2>Skincare heute</h2>
       <div class="panel" id="today-skin"></div>
+    </div>
+    <div>
+      <h2>Supplements heute</h2>
+      <div class="panel" id="today-supps"></div>
     </div>
     <div>
       <h2>Termine heute</h2>
@@ -157,7 +171,7 @@ input,select{font-size:16px}
         <button class="x" id="next" aria-label="Nächster Monat">›</button>
       </div>
       <div class="grid" id="grid"></div>
-      <div class="legend"><span><i style="background:var(--accent)"></i>Termin</span><span><i style="background:var(--ok)"></i>Skincare benutzt</span></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Termin</span><span><i style="background:var(--ok)"></i>Skincare</span><span><i style="background:var(--supp)"></i>Supplements</span></div>
     </div>
     <div>
       <h2 id="sel-label"></h2>
@@ -174,6 +188,35 @@ input,select{font-size:16px}
       <h2>Skincare an diesem Tag</h2>
       <div class="panel" id="sel-skin"></div>
     </div>
+    <div>
+      <h2>Supplements an diesem Tag</h2>
+      <div class="panel" id="sel-supps"></div>
+    </div>
+  </section>
+
+  <!-- SUPPLEMENTS -->
+  <section class="view" id="view-supps" hidden>
+    <div>
+      <h2>Deine Supplements</h2>
+      <div class="actives" id="supps"></div>
+    </div>
+    <div class="panel">
+      <details id="add-supp">
+        <summary>+ Supplement hinzufügen</summary>
+        <form class="add" id="supp-form" style="border-top:1px solid var(--line)">
+          <input type="text" id="supp-name" placeholder="z. B. Vitamin D3 1000 IE" autocomplete="off" aria-label="Name">
+          <select id="supp-slot" aria-label="Tageszeit">
+            <option value="AM">Morgens</option>
+            <option value="NOON">Mittags</option>
+            <option value="PM">Abends</option>
+          </select>
+          <label class="small" style="display:flex;align-items:center;gap:6px">alle
+            <input type="number" id="supp-every" min="1" max="30" value="1" style="width:64px" aria-label="Alle wie viele Tage"> Tage</label>
+          <button class="btn" type="submit">Speichern</button>
+        </form>
+      </details>
+    </div>
+    <p class="small" style="margin:0">„Alle 1 Tage“ heißt täglich. Vergessen einzutragen? Im Kalender den Tag antippen und nachträglich abhaken.</p>
   </section>
 
   <!-- HAUT -->
@@ -268,8 +311,9 @@ input,select{font-size:16px}
   normalize();
 
   function normalize(){
-    state.todos ||= []; state.events ||= []; state.actives ||= []; state.uses ||= {}; state.reminders ||= [];
+    state.todos ||= []; state.events ||= []; state.actives ||= []; state.uses ||= {}; state.reminders ||= []; state.supps ||= [];
   }
+  const SLOT_TIME = {AM:"08:00", NOON:"13:00", PM:"21:00"};
 
   // Google-Kalender-Link mit Wiederholung alle N Tage
   function gcal(title, startDay, time, every, details){
@@ -329,8 +373,8 @@ input,select{font-size:16px}
     const list = (state.uses[aid] || []).filter(d => d <= before).sort();
     return list.length ? list[list.length-1] : null;
   }
-  function statusOf(a){
-    if (usedOn(a.id, TODAY)) return {cls:"ok", text:"Heute benutzt"};
+  function statusOf(a, verb = "benutzt"){
+    if (usedOn(a.id, TODAY)) return {cls: verb === "genommen" ? "supp-ok" : "ok", text:"Heute " + verb};
     const last = lastUse(a.id);
     if (!last) return {cls:"due", text:"Noch nie eingetragen"};
     const since = daysBetween(last, TODAY);
@@ -338,9 +382,9 @@ input,select{font-size:16px}
     const left = a.every - since;
     return {cls:"rest", text: left === 1 ? "Pause bis morgen" : `Pause, noch ${left} Tage`};
   }
-  function sinceText(a){
+  function sinceText(a, verb = "benutzt"){
     const last = lastUse(a.id);
-    if (!last) return "Noch nie benutzt";
+    if (!last) return "Noch nie " + verb;
     const s = daysBetween(last, TODAY);
     return s === 0 ? "Zuletzt: heute" : s === 1 ? "Zuletzt: gestern" : `Zuletzt: vor ${s} Tagen`;
   }
@@ -364,10 +408,38 @@ input,select{font-size:16px}
 
   function render(){
     $("today-label").textContent = fmtLong.format(parse(TODAY));
-    renderToday(); renderCalendar(); renderActives();
+    renderToday(); renderCalendar(); renderActives(); renderSupps();
   }
 
-  function slotLabel(s){ return `<span class="slot">${s === "AM" ? "MORGENS" : "ABENDS"}</span>`; }
+  function slotLabel(s){ return `<span class="slot">${s === "AM" ? "MORGENS" : s === "NOON" ? "MITTAGS" : "ABENDS"}</span>`; }
+
+  function renderSupps(){
+    $("supps").innerHTML = state.supps.map(a => {
+      const st = statusOf(a, "genommen"), used = usedOn(a.id, TODAY);
+      let dots = "";
+      for (let i = 13; i >= 0; i--){ const d = parse(TODAY); d.setDate(d.getDate() - i); const k = iso(d);
+        dots += `<i class="${usedOn(a.id, k) ? "on" : ""}${i === 0 ? " today" : ""}" title="${fmtLong.format(d)}"></i>`; }
+      return `<div class="active supp">
+        <div class="top"><div class="name">${esc(a.name)}</div>${slotLabel(a.slot)}<span class="pill ${st.cls}">${st.text}</span>
+          <button class="x" data-delsupp="${a.id}" aria-label="${esc(a.name)} entfernen">×</button></div>
+        <div class="small">${a.every === 1 ? "täglich" : `alle ${a.every} Tage`} · ${sinceText(a, "genommen")}</div>
+        <div class="bottom"><div class="dots" aria-label="Letzte 14 Tage">${dots}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <a class="btn ghost" target="_blank" rel="noopener" href="${gcal(a.name + " (Supplement)", nextDue(a), SLOT_TIME[a.slot] || "08:00", a.every)}">Erinnerung</a>
+            <button class="btn ${used ? "supp-ok" : ""}" data-use="${a.id}" data-day="${TODAY}">${used ? "✓ Genommen" : "Genommen"}</button></div></div>
+      </div>`;
+    }).join("") || `<div class="panel"><div class="empty">Noch keine Supplements. Unten eins hinzufügen, z. B. Vitamin D oder Magnesium.</div></div>`;
+  }
+
+  function suppRows(day, disabled){
+    return state.supps.map(a => {
+      const used = usedOn(a.id, day), st = statusOf(a, "genommen");
+      return `<div class="row${used ? " done" : ""}">
+        <input type="checkbox" class="check supp" data-use="${a.id}" data-day="${day}" ${used ? "checked" : ""} ${disabled ? "disabled" : ""} aria-label="${esc(a.name)} genommen">
+        <div class="grow"><div>${esc(a.name)}</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px">${slotLabel(a.slot)}${day === TODAY ? `<span class="pill ${st.cls}">${st.text}</span>` : ""}</div></div></div>`;
+    }).join("");
+  }
 
   function renderToday(){
     // skincare
@@ -379,6 +451,7 @@ input,select{font-size:16px}
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px">${slotLabel(a.slot)}<span class="pill ${st.cls}">${st.text}</span></div></div></div>`;
     });
     $("today-skin").innerHTML = rows.join("") || `<div class="empty">Noch keine Wirkstoffe. Im Tab „Haut“ anlegen.</div>`;
+    $("today-supps").innerHTML = suppRows(TODAY, false) || `<div class="empty">Noch keine Supplements. Im Tab „Supplements“ anlegen.</div>`;
 
     const warn = [];
     for (const a of state.actives) if (usedOn(a.id, TODAY)) for (const b of clashesFor(a, TODAY)) if (a.id < b.id) warn.push(`${a.name} + ${b.name}`);
@@ -413,8 +486,9 @@ input,select{font-size:16px}
       if (i === 35 && d.getMonth() !== month.getMonth()) break;
       const hasEv = state.events.some(e => e.date === k);
       const hasSkin = state.actives.some(a => usedOn(a.id, k));
+      const hasSupp = state.supps.some(a => usedOn(a.id, k));
       const cls = ["day", d.getMonth() !== month.getMonth() && "other", k === TODAY && "today", k === selDay && "sel"].filter(Boolean).join(" ");
-      html += `<button class="${cls}" data-day-pick="${k}" aria-label="${fmtLong.format(d)}">${d.getDate()}<span class="m">${hasEv ? "<i></i>" : ""}${hasSkin ? '<i class="s"></i>' : ""}</span></button>`;
+      html += `<button class="${cls}" data-day-pick="${k}" aria-label="${fmtLong.format(d)}">${d.getDate()}<span class="m">${hasEv ? "<i></i>" : ""}${hasSkin ? '<i class="s"></i>' : ""}${hasSupp ? '<i class="p"></i>' : ""}</span></button>`;
     }
     $("grid").innerHTML = html;
     $("sel-label").textContent = selDay === TODAY ? "Heute" : fmtLong.format(parse(selDay));
@@ -427,6 +501,7 @@ input,select{font-size:16px}
         <input type="checkbox" class="check" data-use="${a.id}" data-day="${selDay}" ${used ? "checked" : ""} ${future ? "disabled" : ""} aria-label="${esc(a.name)} an diesem Tag benutzt">
         <div class="grow">${esc(a.name)}</div>${slotLabel(a.slot)}</div>`;
     }).join("") || `<div class="empty">Noch keine Wirkstoffe angelegt.</div>`;
+    $("sel-supps").innerHTML = suppRows(selDay, future) || `<div class="empty">Noch keine Supplements angelegt.</div>`;
   }
 
   function renderActives(){
@@ -455,15 +530,20 @@ input,select{font-size:16px}
 
   // ---------- events ----------
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-view],[data-use],[data-deltodo],[data-delevent],[data-delactive],[data-day-pick],[data-delrem]");
+    const t = e.target.closest("[data-view],[data-use],[data-deltodo],[data-delevent],[data-delactive],[data-day-pick],[data-delrem],[data-delsupp]");
     if (!t) return;
+    if (t.dataset.delsupp){
+      if (t.dataset.armed){ state.supps = state.supps.filter(x => x.id !== t.dataset.delsupp); delete state.uses[t.dataset.delsupp]; save(); render(); }
+      else { t.dataset.armed = "1"; t.textContent = "Wirklich löschen?"; t.style.fontSize = "13px"; setTimeout(() => render(), 3000); }
+      return;
+    }
     if (t.dataset.delrem){
       state.reminders = state.reminders.filter(x => x.id !== t.dataset.delrem); save(); render(); return;
     }
     if (t.dataset.view){
       view = t.dataset.view;
       document.querySelectorAll("nav button").forEach(b => b.setAttribute("aria-selected", b.dataset.view === view));
-      ["heute","kalender","haut"].forEach(v => $("view-" + v).hidden = v !== view);
+      ["heute","kalender","haut","supps"].forEach(v => $("view-" + v).hidden = v !== view);
       try { localStorage.setItem(KEY + ".tab", view); } catch {}
     } else if (t.dataset.use){
       if (t.tagName === "INPUT") e.preventDefault();
@@ -498,6 +578,12 @@ input,select{font-size:16px}
     const every = Math.max(1, Math.min(30, parseInt($("active-every").value, 10) || 1));
     state.actives.push({id:uid(), name, kind:$("active-kind").value, slot:$("active-slot").value, every});
     $("active-name").value = ""; $("add-active").open = false; save(); render();
+  });
+  $("supp-form").addEventListener("submit", e => {
+    e.preventDefault(); const name = $("supp-name").value.trim(); if (!name) return;
+    const every = Math.max(1, Math.min(30, parseInt($("supp-every").value, 10) || 1));
+    state.supps.push({id:uid(), name, slot:$("supp-slot").value, every});
+    $("supp-name").value = ""; $("add-supp").open = false; save(); render();
   });
   $("rem-form").addEventListener("submit", e => {
     e.preventDefault(); const name = $("rem-name").value.trim(); if (!name) return;

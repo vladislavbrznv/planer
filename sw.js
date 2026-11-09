@@ -1,6 +1,6 @@
 // Offline-Cache für Büsra's Planer.
 // Bei einem Update der App: VERSION hochzählen, dann lädt das Handy die neuen Dateien.
-const VERSION = "planer-v1";
+const VERSION = "planer-v2";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
