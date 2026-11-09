@@ -88,6 +88,11 @@ form.add input[type=text]{flex:1 1 160px}
 .active .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .active .name{font:600 16px var(--body);flex:1 1 150px;min-width:0}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
+.btn.sm{padding:7px 11px;font-size:13px}
+.remind{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.remind select,.remind input{padding:7px 10px;font-size:14px}
+.timepick{display:flex;align-items:center;gap:6px}
+.timepick input{padding:6px 8px;font-size:14px;width:auto}
 .dots{display:flex;gap:4px;align-items:center}
 .dots i{width:14px;height:14px;border-radius:4px;background:var(--sunk)}
 .dots i.on{background:var(--ok)}
@@ -180,6 +185,13 @@ input,select{font-size:16px}
         <form class="add" id="event-form">
           <input type="time" id="event-time" aria-label="Uhrzeit (optional)">
           <input type="text" id="event-input" placeholder="Termin eintragen…" autocomplete="off" aria-label="Termin">
+          <select id="event-remind" aria-label="Erinnerung">
+            <option value="none">Keine Erinnerung</option>
+            <option value="start">Zur Startzeit</option>
+            <option value="1h">1 Std. vorher</option>
+            <option value="1d" selected>1 Tag vorher</option>
+            <option value="custom">Eigene Zeit…</option>
+          </select>
           <button class="btn" type="submit">Eintragen</button>
         </form>
       </div>
@@ -216,6 +228,7 @@ input,select{font-size:16px}
         </form>
       </details>
     </div>
+    <p class="small" style="margin:0"><b>Tipp für pünktliche Erinnerungen:</b> In Google Kalender unter Einstellungen → dein Kalender → Standardbenachrichtigungen „Zum Zeitpunkt des Termins“ wählen. Sonst meldet sich Google 30 Minuten zu früh.</p>
     <p class="small" style="margin:0">„Alle 1 Tage“ heißt täglich. Vergessen einzutragen? Im Kalender den Tag antippen und nachträglich abhaken.</p>
   </section>
 
@@ -322,8 +335,30 @@ input,select{font-size:16px}
     const e = new Date(s.getTime() + 15 * 60000);
     const f = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
     const p = new URLSearchParams({action:"TEMPLATE", text:title, dates:`${f(s)}/${f(e)}`,
-      recur:`RRULE:FREQ=DAILY;INTERVAL=${every}`, details: details || "Erinnerung aus dem Planer"});
+      details: details || "Erinnerung aus dem Planer"});
+    if (every) p.set("recur", `RRULE:FREQ=DAILY;INTERVAL=${every}`);
     return "https://calendar.google.com/calendar/render?" + p.toString();
+  }
+
+  // ---------- Termin-Erinnerungen ----------
+  const REMIND = {none:"Keine Erinnerung", start:"Zur Startzeit", "1h":"1 Std. vorher", "1d":"1 Tag vorher", custom:"Eigene Zeit…"};
+  const fmtShort = new Intl.DateTimeFormat("de-DE", {weekday:"short", day:"numeric", month:"numeric", hour:"2-digit", minute:"2-digit"});
+  function eventStart(e){ const d = parse(e.date); const [h, m] = (e.time || "09:00").split(":").map(Number); d.setHours(h, m, 0, 0); return d; }
+  const toLocalInput = d => `${iso(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  function remindAt(e){
+    const s = eventStart(e);
+    switch (e.remind){
+      case "start": return s;
+      case "1h": return new Date(s.getTime() - 3600e3);
+      case "1d": { const d = new Date(s); d.setDate(d.getDate() - 1); return d; }
+      case "custom": { if (!e.at) return null; const [day, t] = e.at.split("T"); const d = parse(day); const [h, m] = t.split(":").map(Number); d.setHours(h, m, 0, 0); return d; }
+      default: return null;
+    }
+  }
+  function eventGcal(e){
+    const at = remindAt(e); if (!at) return "";
+    const when = parse(e.date).toLocaleDateString("de-DE", {weekday:"short", day:"numeric", month:"numeric"}) + (e.time ? `, ${e.time} Uhr` : "");
+    return gcal(`Erinnerung: ${e.title} (${when})`, iso(at), `${pad(at.getHours())}:${pad(at.getMinutes())}`, null, `Termin: ${e.title}, ${when}`);
   }
   function nextDue(a){
     const last = lastUse(a.id);
@@ -425,7 +460,8 @@ input,select{font-size:16px}
         <div class="small">${a.every === 1 ? "täglich" : `alle ${a.every} Tage`} · ${sinceText(a, "genommen")}</div>
         <div class="bottom"><div class="dots" aria-label="Letzte 14 Tage">${dots}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <a class="btn ghost" target="_blank" rel="noopener" href="${gcal(a.name + " (Supplement)", nextDue(a), SLOT_TIME[a.slot] || "08:00", a.every)}">Erinnerung</a>
+            <label class="timepick small">um <input type="time" data-itemtime="${a.id}" value="${a.time || SLOT_TIME[a.slot] || "08:00"}" aria-label="Uhrzeit der Erinnerung"></label>
+            <a class="btn ghost" target="_blank" rel="noopener" href="${gcal(a.name + " (Supplement)", nextDue(a), a.time || SLOT_TIME[a.slot] || "08:00", a.every)}">Erinnerung</a>
             <button class="btn ${used ? "supp-ok" : ""}" data-use="${a.id}" data-day="${TODAY}">${used ? "✓ Genommen" : "Genommen"}</button></div></div>
       </div>`;
     }).join("") || `<div class="panel"><div class="empty">Noch keine Supplements. Unten eins hinzufügen, z. B. Vitamin D oder Magnesium.</div></div>`;
@@ -472,7 +508,18 @@ input,select{font-size:16px}
   }
 
   function eventRow(e){
-    return `<div class="row"><span class="time">${e.time || "–"}</span><div class="grow">${esc(e.title)}</div>
+    const mode = e.remind || "none", at = remindAt(e), link = eventGcal(e);
+    const opts = Object.entries(REMIND).map(([k, v]) => `<option value="${k}" ${k === mode ? "selected" : ""}>${v}</option>`).join("");
+    return `<div class="row" style="align-items:flex-start"><span class="time" style="padding-top:2px">${e.time || "–"}</span>
+      <div class="grow" style="display:flex;flex-direction:column;gap:8px">
+        <div>${esc(e.title)}</div>
+        <div class="remind">
+          <select data-remind="${e.id}" aria-label="Erinnerung für ${esc(e.title)}">${opts}</select>
+          ${mode === "custom" ? `<input type="datetime-local" data-remat="${e.id}" value="${e.at || ""}" aria-label="Erinnerungszeit">` : ""}
+        </div>
+        ${at ? `<div class="remind"><span class="small">🔔 ${fmtShort.format(at)} Uhr</span>
+          <a class="btn ghost sm" target="_blank" rel="noopener" href="${link}">In Google Kalender</a></div>` : ""}
+      </div>
       <button class="x" data-delevent="${e.id}" aria-label="Termin löschen">×</button></div>`;
   }
 
@@ -517,7 +564,8 @@ input,select{font-size:16px}
         <div class="small">${KIND[a.kind] || "Sonstiges"} · alle ${a.every} ${a.every === 1 ? "Tag" : "Tage"} · ${sinceText(a)}</div>
         <div class="bottom"><div class="dots" aria-label="Letzte 14 Tage">${dots}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <a class="btn ghost" target="_blank" rel="noopener" href="${gcal(a.name + " (Skincare)", nextDue(a), a.slot === "AM" ? "08:00" : "21:00", a.every)}">Erinnerung</a>
+            <label class="timepick small">um <input type="time" data-itemtime="${a.id}" value="${a.time || SLOT_TIME[a.slot] || "21:00"}" aria-label="Uhrzeit der Erinnerung"></label>
+            <a class="btn ghost" target="_blank" rel="noopener" href="${gcal(a.name + " (Skincare)", nextDue(a), a.time || SLOT_TIME[a.slot] || "21:00", a.every)}">Erinnerung</a>
             <button class="btn ${used ? "ok" : ""}" data-use="${a.id}" data-day="${TODAY}">${used ? "✓ Heute benutzt" : "Heute benutzt"}</button></div></div>
       </div>`;
     }).join("") || `<div class="panel"><div class="empty">Noch keine Wirkstoffe. Unten einen hinzufügen.</div></div>`;
@@ -562,6 +610,17 @@ input,select{font-size:16px}
   document.addEventListener("change", e => {
     const t = e.target;
     if (t.dataset.todo){ const x = state.todos.find(x => x.id === t.dataset.todo); if (x){ x.done = t.checked; save(); render(); } }
+    if (t.dataset.remind){
+      const ev = state.events.find(x => x.id === t.dataset.remind); if (!ev) return;
+      ev.remind = t.value;
+      if (ev.remind === "custom" && !ev.at){ const d = eventStart(ev); d.setDate(d.getDate() - 1); ev.at = toLocalInput(d); }
+      save(); render();
+    }
+    if (t.dataset.remat){ const ev = state.events.find(x => x.id === t.dataset.remat); if (ev && t.value){ ev.at = t.value; save(); render(); } }
+    if (t.dataset.itemtime){
+      const it = [...state.supps, ...state.actives].find(x => x.id === t.dataset.itemtime);
+      if (it && t.value){ it.time = t.value; save(); render(); }
+    }
   });
   $("todo-form").addEventListener("submit", e => {
     e.preventDefault(); const v = $("todo-input").value.trim(); if (!v) return;
@@ -570,7 +629,9 @@ input,select{font-size:16px}
   $("clear-done").addEventListener("click", () => { state.todos = state.todos.filter(t => !t.done); save(); render(); });
   $("event-form").addEventListener("submit", e => {
     e.preventDefault(); const v = $("event-input").value.trim(); if (!v) return;
-    state.events.push({id:uid(), date:selDay, time:$("event-time").value || "", title:v});
+    const ev = {id:uid(), date:selDay, time:$("event-time").value || "", title:v, remind:$("event-remind").value};
+    if (ev.remind === "custom"){ const d = eventStart(ev); d.setDate(d.getDate() - 1); ev.at = toLocalInput(d); }
+    state.events.push(ev);
     $("event-input").value = ""; $("event-time").value = ""; save(); render();
   });
   $("active-form").addEventListener("submit", e => {
