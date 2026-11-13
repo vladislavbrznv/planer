@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Büsra's Planer</title>
 <meta name="theme-color" content="#f7f4fb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#110e18" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#1a1029" media="(prefers-color-scheme: dark)">
+<script>try{var t=localStorage.getItem("planer.theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -31,17 +32,17 @@
   --nav-h:68px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#110e18; --surface:#1a1623; --raised:#231e2e; --line:#2d2739; --fg:#f2edf8; --muted:#a59db6; --faint:#6e6782;
-  --accent:#c6b2f4; --on-accent:#1a1228; --accent-soft:#2a2240;
-  --skin:#8fd4b6; --skin-soft:#1a2c26; --supp:#f4ae88; --supp-soft:#33241d;
-  --warn:#f1c27c; --warn-soft:#2f2517; --danger:#e8706b;
+  --bg:#1a1029; --surface:#241737; --raised:#2f2045; --line:#3b2b55; --fg:#f4eefc; --muted:#b4a6cc; --faint:#7c6d96;
+  --accent:#cdb6ff; --on-accent:#1f1233; --accent-soft:#3a2860;
+  --skin:#8fd4b6; --skin-soft:#1f3532; --supp:#f4ae88; --supp-soft:#3d2a2c;
+  --warn:#f1c27c; --warn-soft:#3a2a26; --danger:#e8706b;
   --shadow:0 1px 0 rgb(255 255 255 / .03) inset, 0 10px 30px -14px rgb(0 0 0 / .6);
   color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#110e18; --surface:#1a1623; --raised:#231e2e; --line:#2d2739; --fg:#f2edf8; --muted:#a59db6; --faint:#6e6782;
-  --accent:#c6b2f4; --on-accent:#1a1228; --accent-soft:#2a2240;
-  --skin:#8fd4b6; --skin-soft:#1a2c26; --supp:#f4ae88; --supp-soft:#33241d;
-  --warn:#f1c27c; --warn-soft:#2f2517; --danger:#e8706b;
+  --bg:#1a1029; --surface:#241737; --raised:#2f2045; --line:#3b2b55; --fg:#f4eefc; --muted:#b4a6cc; --faint:#7c6d96;
+  --accent:#cdb6ff; --on-accent:#1f1233; --accent-soft:#3a2860;
+  --skin:#8fd4b6; --skin-soft:#1f3532; --supp:#f4ae88; --supp-soft:#3d2a2c;
+  --warn:#f1c27c; --warn-soft:#3a2a26; --danger:#e8706b;
   --shadow:0 1px 0 rgb(255 255 255 / .03) inset, 0 10px 30px -14px rgb(0 0 0 / .6);
   color-scheme:dark}
 
@@ -57,7 +58,14 @@ button,input,select{font-family:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 /* ---------- Kopf ---------- */
-.masthead{padding-block:28px 6px;display:flex;flex-direction:column;gap:6px}
+.masthead{padding-block:28px 6px;display:flex;flex-direction:column;gap:6px;position:relative}
+.theme-btn{position:absolute;top:18px;right:0;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--accent);
+  display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s}
+.theme-btn:active{transform:scale(.92)}
+.theme-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.masthead .eyebrow{padding-right:56px}
+html{transition:background-color .25s}
+body{transition:background-color .25s,color .25s}
 .eyebrow{margin:0;font:600 11.5px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
 h1{margin:0;font:500 44px/.95 var(--serif);letter-spacing:-.01em;text-wrap:balance}
 h1 em{font-style:italic;font-weight:400;color:var(--accent)}
@@ -259,6 +267,7 @@ details[open]{background:var(--surface);border-style:solid}
 <div class="wrap">
   <header class="masthead">
     <p class="eyebrow" id="today-label"></p>
+    <button class="theme-btn" id="theme-btn" type="button" aria-label="Dunkelmodus einschalten"></button>
     <h1><em>Büsra's</em> Planer</h1>
   </header>
 
@@ -1012,6 +1021,27 @@ details[open]{background:var(--surface);border-style:solid}
   try { const tab = localStorage.getItem(KEY + ".tab"); if (tab && tab !== "heute") document.querySelector(`[data-view="${tab}"]`)?.click(); } catch {}
   $("backup-export").addEventListener("click", exportBackup);
   $("backup-import").addEventListener("change", e => { const f = e.target.files[0]; if (f) importBackup(f); e.target.value = ""; });
+
+  // ---------- Hell / Dunkel ----------
+  const SUN = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>';
+  const MOON = '<svg viewBox="0 0 24 24"><path d="M20 14.6A8.2 8.2 0 0 1 9.4 4a8.2 8.2 0 1 0 10.6 10.6z"/></svg>';
+  const darkMQ = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+  const effectiveTheme = () => document.documentElement.dataset.theme || (darkMQ?.matches ? "dark" : "light");
+  function paintThemeBtn(){
+    const dark = effectiveTheme() === "dark";
+    $("theme-btn").innerHTML = dark ? SUN : MOON;
+    $("theme-btn").setAttribute("aria-label", dark ? "Hellen Modus einschalten" : "Dunkelmodus einschalten");
+    const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute("content", bg));
+  }
+  $("theme-btn").addEventListener("click", () => {
+    const next = effectiveTheme() === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    lsSet("planer.theme", next);
+    paintThemeBtn();
+  });
+  darkMQ?.addEventListener?.("change", paintThemeBtn);
+  paintThemeBtn();
 
   render();
   connect();
