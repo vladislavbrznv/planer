@@ -484,6 +484,14 @@ details[open]{background:var(--surface);border-style:solid}
   });
 
   let state = null;
+  // Updates ändern nie die Einträge. Zur Sicherheit wird beim ersten Start einer neuen Version
+  // eine unveränderte Kopie abgelegt (nur auf diesem Handy).
+  const APP_VERSION = "v10";
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw && localStorage.getItem("planer.appv") !== APP_VERSION) localStorage.setItem(KEY + ".vor-update", raw);
+    localStorage.setItem("planer.appv", APP_VERSION);
+  } catch {}
   try { const raw = localStorage.getItem(KEY); if (raw) state = JSON.parse(raw); } catch {}
   if (!state) state = starter();
   normalize();
@@ -591,14 +599,51 @@ details[open]{background:var(--surface);border-style:solid}
   }
   let pushTimer = null;
   function schedulePush(){ clearTimeout(pushTimer); pushTimer = setTimeout(() => syncPush(false), 1200); }
+  // ---------- Verschlüsselung der Benachrichtigungstexte ----------
+  // Der Schlüssel entsteht auf diesem Handy, liegt nur hier (IndexedDB, nicht exportierbar)
+  // und verlässt es nie. Der Server sieht nur Uhrzeiten und unlesbaren Text.
+  function keyDb(){
+    return new Promise((res, rej) => {
+      const r = indexedDB.open("planer-keys", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("k");
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    });
+  }
+  async function keyGet(){
+    const db = await keyDb();
+    return new Promise((res, rej) => { const q = db.transaction("k").objectStore("k").get("note"); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
+  }
+  async function keyPut(v){
+    const db = await keyDb();
+    return new Promise((res, rej) => { const t = db.transaction("k", "readwrite"); t.objectStore("k").put(v, "note"); t.oncomplete = () => res(); t.onerror = () => rej(t.error); });
+  }
+  async function noteKey(){
+    let key = await keyGet();
+    if (!key){ key = await crypto.subtle.generateKey({name:"AES-GCM", length:256}, false, ["encrypt", "decrypt"]); await keyPut(key); }
+    return key;
+  }
+  const toB64u = u8 => btoa(String.fromCharCode(...u8)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  async function seal(obj){
+    const key = await noteKey(), iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, new TextEncoder().encode(JSON.stringify(obj))));
+    const out = new Uint8Array(12 + ct.length); out.set(iv); out.set(ct, 12);
+    return toB64u(out);
+  }
+  async function fingerprint(str){
+    return toB64u(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str))));
+  }
+
   async function syncPush(force){
     if (!pushOn()) return;
     try {
       const sub = await currentSub(); if (!sub) return;
-      const body = JSON.stringify({id:deviceId, sub:sub.toJSON(), tz:Intl.DateTimeFormat().resolvedOptions().timeZone, rules:buildRules()});
-      if (!force && body === lsGet("planer.lastsync")) return;
-      await post("/sync", JSON.parse(body));
-      lsSet("planer.lastsync", body);
+      const plain = {sub:sub.toJSON(), tz:Intl.DateTimeFormat().resolvedOptions().timeZone, rules:buildRules()};
+      const fp = await fingerprint(JSON.stringify(plain) + "|e2e1");
+      if (!force && fp === lsGet("planer.lastsync")) return;
+      // Namen & Titel verschlüsseln, nur Zeitplan bleibt lesbar
+      const rules = await Promise.all(plain.rules.map(async ({t, b, ...rest}) => ({...rest, c: await seal({t, b})})));
+      await post("/sync", {id:deviceId, sub:plain.sub, tz:plain.tz, rules});
+      lsSet("planer.lastsync", fp);
     } catch { /* offline: beim nächsten Öffnen erneut */ }
   }
   async function enablePush(){

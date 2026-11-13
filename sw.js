@@ -1,6 +1,6 @@
 // Offline-Cache für Büsra's Planer.
 // Bei einem Update der App: VERSION hochzählen, dann lädt das Handy die neuen Dateien.
-const VERSION = "planer-v9";
+const VERSION = "planer-v10";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -16,17 +16,45 @@ self.addEventListener("activate", e => {
 });
 
 // ---------- Benachrichtigungen ----------
+// Texte kommen verschlüsselt an ("c") und werden nur hier auf dem Handy entschlüsselt.
+// Der Schlüssel liegt in IndexedDB und wurde von der App auf diesem Gerät erzeugt.
+function keyGet() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open("planer-keys", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("k");
+    r.onerror = () => rej(r.error);
+    r.onsuccess = () => {
+      const q = r.result.transaction("k").objectStore("k").get("note");
+      q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
+    };
+  });
+}
+const fromB64u = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0));
+async function unseal(c) {
+  const key = await keyGet(); if (!key) throw new Error("kein Schlüssel");
+  const raw = fromB64u(c);
+  const pt = await crypto.subtle.decrypt({name: "AES-GCM", iv: raw.slice(0, 12)}, key, raw.slice(12));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
 self.addEventListener("push", e => {
-  let msg = {};
-  try { msg = e.data ? e.data.json() : {}; } catch { msg = {body: e.data?.text()}; }
-  e.waitUntil(self.registration.showNotification(msg.title || "Büsra's Planer", {
-    body: msg.body || "",
-    tag: msg.tag || undefined,
-    renotify: !!msg.tag,
-    icon: "icon-192.png",
-    badge: "icon-192.png",
-    data: {url: self.registration.scope},
-  }));
+  e.waitUntil((async () => {
+    let msg = {};
+    try { msg = e.data ? e.data.json() : {}; } catch { msg = {body: e.data?.text()}; }
+    let title = msg.title, body = msg.body;
+    if (msg.c) {
+      try { const p = await unseal(msg.c); title = p.t; body = p.b; }
+      catch { title = "Büsra's Planer"; body = "Du hast eine Erinnerung. Öffne die App."; }
+    }
+    await self.registration.showNotification(title || "Büsra's Planer", {
+      body: body || "",
+      tag: msg.tag || undefined,
+      renotify: !!msg.tag,
+      icon: "icon-192.png",
+      badge: "icon-192.png",
+      data: {url: self.registration.scope},
+    });
+  })());
 });
 
 self.addEventListener("notificationclick", e => {
